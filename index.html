@@ -50,7 +50,7 @@
         // 2. Cargar el modelo 3D (.glb) - RUTA CORREGIDA
         const loader = new GLTFLoader();
         // Aquí está el cambio: busca el archivo directo, sin subcarpetas
-        loader.load('Apartamento.glb', function (gltf) {
+        loader.load(('./apartamento.glb', function (gltf) {
             const modelo = gltf.scene;
             modelo.traverse((child) => {
                 if (child.isMesh) {
