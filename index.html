@@ -7,10 +7,10 @@
         body { margin: 0; overflow: hidden; background-color: #87CEEB; }
         #info { 
             position: absolute; top: 10px; width: 100%; text-align: center; 
-            color: white; font-family: Arial, sans-serif; font-size: 20px; font-weight: bold;
+            color: white; font-family: Arial, sans-serif; font-size: 18px; 
             pointer-events: none; z-index: 100; text-shadow: 1px 1px 2px black;
         }
-        #loading {
+        #loading { 
             position: absolute; top: 50%; width: 100%; text-align: center;
             color: white; font-family: Arial, sans-serif; font-size: 30px; font-weight: bold;
             pointer-events: none; z-index: 100; text-shadow: 1px 1px 2px black;
@@ -18,8 +18,8 @@
     </style>
 </head>
 <body>
-    <div id="info">Usa las flechas ↑ ↓ ← → para moverte, el mouse para mirar, y la rueda para el zoom.</div>
-    <div id="loading">Cargando apartamento... (Espera unos segundos)</div>
+    <div id="info">Haz clic para entrar al apartamento (Usa W, A, S, D para caminar y el mouse para mirar. ESC para salir)</div>
+    <div id="loading">Cargando apartamento...</div>
 
     <script type="importmap">
         {
@@ -33,97 +33,147 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        // 1. Escena y Cámara
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); 
+        let camera, scene, renderer, controls, modelo;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-        // Ponemos la cámara bien lejos y arriba para ver todo el modelo
-        camera.position.set(10, 15, 10); 
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        // 2. Luces (Muy brillantes para que nada quede en sombra)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 2.0); 
-        scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 2.0); 
-        dirLight.position.set(10, 20, 10);
-        scene.add(dirLight);
-
-        // 3. Controles tipo Metaverso (Vuelo con flechas y mouse)
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; 
-        controls.dampingFactor = 0.05;
-        controls.screenSpacePanning = true; 
-        controls.maxDistance = 500;
-        controls.minDistance = 0.5;
-        
-        // Aquí mapeamos las flechas del teclado para que se muevan
-        controls.listenToKeyEvents(window); 
-        controls.keys = {
-            LEFT: 'ArrowLeft', // izquierda
-            UP: 'ArrowUp', // arriba
-            RIGHT: 'ArrowRight', // derecha
-            BOTTOM: 'ArrowDown' // abajo
-        };
-
-        // 4. Cargar el Modelo
-        const loader = new GLTFLoader();
-        loader.load('./apartamento.glb', function (gltf) {
-            
-            // ESTO QUITA EL MENSAJE DE "CARGANDO"
-            document.getElementById('loading').innerText = "¡Apartamento cargado!";
-            setTimeout(() => { document.getElementById('loading').innerText = ""; }, 3000);
-
-            const modelo = gltf.scene;
-            
-            // --- EL TRUCO MÁGICO DE ESCALA ---
-            // Los modelos 3D a veces vienen en centímetros o milímetros. 
-            // Vamos a hacer que el modelo mida más o menos 10 metros.
-            const box = new THREE.Box3().setFromObject(modelo);
-            const size = box.getSize(new THREE.Vector3());
-            const maxSize = Math.max(size.x, size.y, size.z);
-            const scaleFactor = 10 / maxSize;
-            
-            // Ajustamos el tamaño del modelo
-            modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
-            
-            // Lo centramos en el medio de la escena
-            const center = box.getCenter(new THREE.Vector3());
-            modelo.position.x += (modelo.position.x - center.x) * scaleFactor;
-            modelo.position.y += (modelo.position.y - center.y) * scaleFactor;
-            modelo.position.z += (modelo.position.z - center.z) * scaleFactor;
-
-            scene.add(modelo);
-            
-            // Enfocar la cámara en el modelo
-            controls.target.set(0, 0, 0);
-
-        }, undefined, function (error) {
-            console.error('Error:', error);
-            document.getElementById('loading').innerText = "❌ Error: No se encontró el archivo.";
-            document.getElementById('loading').style.color = "red";
-        });
-
-        // 5. Animación
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update(); 
-            renderer.render(scene, camera);
-        }
-
+        init();
         animate();
 
-        // Ajustar tamaño
-        window.addEventListener('resize', () => {
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            scene.fog = new THREE.Fog(0x87CEEB, 0, 30); // Niebla para que no veas el vacío fuera
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); 
+            dirLight.position.set(10, 20, 10);
+            scene.add(dirLight);
+
+            // Renderizador
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Controles en Primera Persona (Caminar)
+            controls = new PointerLockControls(camera, document.body);
+            
+            // Evento para hacer clic y entrar en modo caminar
+            document.body.addEventListener('click', function () {
+                controls.lock();
+            });
+
+            controls.addEventListener('lock', function () {
+                document.getElementById('info').style.display = 'none';
+            });
+
+            controls.addEventListener('unlock', function () {
+                document.getElementById('info').style.display = 'block';
+                document.getElementById('info').innerText = "Haz clic para volver a entrar (ESC para salir)";
+            });
+
+            scene.add(controls.getObject());
+
+            // Movimiento con teclado
+            const onKeyDown = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp': case 'KeyW': moveForward = true; break;
+                    case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+                    case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+                    case 'ArrowRight': case 'KeyD': moveRight = true; break;
+                }
+            };
+
+            const onKeyUp = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp': case 'KeyW': moveForward = false; break;
+                    case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+                    case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+                    case 'ArrowRight': case 'KeyD': moveRight = false; break;
+                }
+            };
+
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+
+            // Cargar el modelo
+            const loader = new GLTFLoader();
+            loader.load('./apartamento.glb', function (gltf) {
+                document.getElementById('loading').style.display = 'none';
+                
+                modelo = gltf.scene;
+                
+                // Ajuste de escala para que la cámara quede a la altura de los ojos
+                const box = new THREE.Box3().setFromObject(modelo);
+                const size = box.getSize(new THREE.Vector3());
+                const maxSize = Math.max(size.x, size.y, size.z);
+                const scaleFactor = 10 / maxSize;
+                modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+                // Centrar el modelo
+                const center = box.getCenter(new THREE.Vector3());
+                modelo.position.x -= center.x * scaleFactor;
+                modelo.position.y -= center.y * scaleFactor;
+                modelo.position.z -= center.z * scaleFactor;
+                
+                // Poner el piso a la altura 0
+                modelo.position.y += (size.y * scaleFactor) / 2;
+
+                // Activar colisiones básicas con las paredes
+                modelo.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
+
+                scene.add(modelo);
+
+                // Colocar la cámara a 1.6 metros de altura (altura de los ojos) al inicio
+                controls.getObject().position.y = 1.6;
+                controls.getObject().position.z = 5; // Un poco hacia atrás para que no aparezca dentro de una pared
+            }, undefined, function (error) {
+                document.getElementById('loading').innerText = "❌ Error al cargar el modelo.";
+                console.error(error);
+            });
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (controls.isLocked === true) {
+                // Fricción (frenado)
+                velocity.x -= velocity.x * 10.0 * 0.016; 
+                velocity.z -= velocity.z * 10.0 * 0.016;
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize(); // Evita que te muevas más rápido en diagonal
+
+                if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
+
+                controls.moveRight(-velocity.x * 0.016);
+                controls.moveForward(-velocity.z * 0.016);
+            }
+
+            renderer.render(scene, camera);
+        }
     </script>
 </body>
 </html>
