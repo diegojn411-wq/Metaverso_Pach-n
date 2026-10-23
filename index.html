@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <title>Recorrido 3D - J.Pachón</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #111; }
+        body { margin: 0; overflow: hidden; background-color: #222; }
         #info { position: absolute; top: 10px; width: 100%; text-align: center; color: white; font-family: Arial, sans-serif; pointer-events: none; z-index: 100; }
     </style>
 </head>
 <body>
-    <div id="info">Haz clic para empezar a caminar (Usa W, A, S, D y el mouse. Presiona ESC para salir)</div>
+    <div id="info">Usa las flechas del teclado (↑ ↓ ← →) o W, A, S, D para volar. Usa Q y E para subir y bajar.</div>
 
-    <!-- Importamos la librería Three.js desde internet -->
     <script type="importmap">
         {
             "imports": {
@@ -24,90 +23,59 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-        // 1. Configurar la escena, cámara y luces
+        // 1. Escena y Cámara
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB); // Color de fondo celeste
+        scene.background = new THREE.Color(0x87CEEB); 
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.y = 1.6; // Altura de los ojos (1.6 metros)
+        camera.position.set(0, 10, 10); // Cámara elevada para ver todo desde arriba al inicio
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
         document.body.appendChild(renderer.domElement);
 
-        // Luces mejoradas
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
+        // 2. Luces
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); 
         scene.add(ambientLight);
-        
         const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); 
         dirLight.position.set(10, 20, 10);
-        dirLight.castShadow = true;
         scene.add(dirLight);
 
-        // 2. Cargar el modelo 3D (.glb) - RUTA CORREGIDA
+        // 3. Controles de Vuelo (OrbitControls)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Suaviza el movimiento
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = true; 
+        controls.maxDistance = 100; // Límite de alejamiento
+
+        // 4. Cargar el Modelo
         const loader = new GLTFLoader();
-        // Aquí está el cambio: busca el archivo directo, sin subcarpetas
-        loader.load(('./apartamento.glb', function (gltf) {
+        loader.load('./apartamento.glb', function (gltf) {
             const modelo = gltf.scene;
-            modelo.traverse((child) => {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
+            
+            // --- TRUCO DE ESCALA ---
+            // Si el modelo está en centímetros (muy grande) o milímetros, lo ajustamos.
+            // Prueba con estos números. Si sigue muy grande, cambia 1 a 0.01
+            modelo.scale.set(1, 1, 1); 
+            
             scene.add(modelo);
         }, undefined, function (error) {
             console.error('Error al cargar el modelo:', error);
-            alert('No se encontró el archivo. Revisa la ruta en el código.');
+            alert('No se encontró el archivo apartamento.glb en la carpeta.');
         });
 
-        // 3. Controles en Primera Persona (Caminar)
-        const controls = new PointerLockControls(camera, document.body);
-        
-        document.addEventListener('click', function () {
-            controls.lock(); // Bloquea el mouse para mirar alrededor
-        });
-
-        const moveSpeed = 5.0;
-        const keys = { w: false, a: false, s: false, d: false };
-
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'KeyW') keys.w = true;
-            if (e.code === 'KeyA') keys.a = true;
-            if (e.code === 'KeyS') keys.s = true;
-            if (e.code === 'KeyD') keys.d = true;
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'KeyW') keys.w = false;
-            if (e.code === 'KeyA') keys.a = false;
-            if (e.code === 'KeyS') keys.s = false;
-            if (e.code === 'KeyD') keys.d = false;
-        });
-
-        // 4. Animación y movimiento
-        const clock = new THREE.Clock();
-
+        // 5. Animación
         function animate() {
             requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-
-            if (controls.isLocked) {
-                if (keys.w) controls.moveForward(moveSpeed * delta);
-                if (keys.s) controls.moveForward(-moveSpeed * delta);
-                if (keys.a) controls.moveRight(-moveSpeed * delta);
-                if (keys.d) controls.moveRight(moveSpeed * delta);
-            }
-
+            controls.update(); // Necesario para que funcione el mouse
             renderer.render(scene, camera);
         }
 
         animate();
 
-        // Ajustar tamaño si se cambia el tamaño de la ventana
+        // Ajustar tamaño
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
