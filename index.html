@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Metaverso J.Pachón - Ajuste Final</title>
+    <title>Metaverso J.Pachón - Ajuste Quirúrgico</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; }
         #info { 
@@ -40,27 +40,26 @@
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
 
-        // --- CONFIGURACIÓN ---
-        const alturaTecho = 3.0; 
-        const posicionPuertaZ = -12; 
-        const posicionApartamentoZ = -20; 
-        
-        // AJUSTE MANUAL DE POSICIÓN (Si lo ves a la derecha, hacemos esto más negativo)
-        const ajusteX = -1.5; 
+        // --- CONFIGURACIÓN DEL MUNDO ---
+        const alturaTecho = 2.8; 
+        const posicionPuertaZ = -10; 
+        const posicionApartamentoZ = -18; 
+        // EL AJUSTE MÁGICO: Movemos el apartamento a la izquierda
+        const ajusteX = -2.0; 
 
         init();
         animate();
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x222222); 
-            scene.fog = new THREE.Fog(0x222222, 1, 50);
+            scene.background = new THREE.Color(0x1a1a1a); 
+            scene.fog = new THREE.Fog(0x1a1a1a, 1, 40);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); 
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
             scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); 
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2); 
             dirLight.position.set(0, 10, 10);
             scene.add(dirLight);
 
@@ -114,23 +113,29 @@
                 
                 const modelo = gltf.scene;
                 
+                // 1. Calculamos caja y centro
                 const box = new THREE.Box3().setFromObject(modelo);
                 const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+
+                // 2. Escalar a 10 metros
                 const maxSize = Math.max(size.x, size.y, size.z);
                 const scaleFactor = 10 / maxSize;
                 modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-                // EL TRUCO DEL SUELO
+                // 3. Centrar en sí mismo y forzar suelo
+                modelo.position.x = -center.x * scaleFactor;
                 modelo.position.y = -box.min.y * scaleFactor; 
-                
-                // CENTRADO Y AJUSTE MANUAL EN X y Z
-                modelo.position.x = ajusteX;
-                modelo.position.z = posicionApartamentoZ;
+                modelo.position.z = -center.z * scaleFactor;
+
+                // 4. Mover a la posición final (aplicando el ajuste a la izquierda)
+                modelo.position.x += ajusteX; 
+                modelo.position.z += posicionApartamentoZ;
 
                 scene.add(modelo);
 
-                // Cámara al inicio (Dentro del ascensor, mirando al pasillo)
-                controls.getObject().position.set(0, 1.6, 2); 
+                // Cámara al inicio (Dentro del ascensor)
+                controls.getObject().position.set(0, 1.6, 5); 
 
             }, undefined, function (error) {
                 document.getElementById('loading').innerText = "❌ Error al cargar el modelo.";
@@ -141,14 +146,14 @@
 
         function crearEntorno() {
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 });
-            const matPared = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.9 });
+            const matPared = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 });
             const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
-            const matMetal = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.2 });
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.8, roughness: 0.2 });
 
-            // PASILLO
-            const largoPasillo = 17;
-            const anchoPasillo = 3;
+            // PASILLO (Ancho original de 2.5)
+            const largoPasillo = 15;
+            const anchoPasillo = 2.5;
 
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2;
@@ -187,24 +192,28 @@
             scene.add(hojaPuerta);
 
             // TECHO FALSO DEL APARTAMENTO
-            const techoApt = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), matTecho);
+            const techoApt = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), matTecho);
             techoApt.rotation.x = Math.PI / 2;
-            techoApt.position.set(0, alturaTecho, posicionApartamentoZ);
+            techoApt.position.set(ajusteX, alturaTecho, posicionApartamentoZ); // Se mueve con el ajuste
             scene.add(techoApt);
 
-            // PUERTAS DEL ELEVADOR (Detrás de ti)
+            // ELEVADOR
+            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
+            pisoAsc.rotation.x = -Math.PI / 2;
+            pisoAsc.position.set(0, 0.01, 6.5);
+            scene.add(pisoAsc);
+
             const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
-            puertaAscIzq.position.set(-1.25, 1.15, 3.5);
+            puertaAscIzq.position.set(-1.3, 1.15, 6.5);
             scene.add(puertaAscIzq);
 
             const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
-            puertaAscDer.position.set(1.25, 1.15, 3.5);
+            puertaAscDer.position.set(1.3, 1.15, 6.5);
             scene.add(puertaAscDer);
 
-            // LUZ DEL PASILLO
             for (let i = 0; i < 4; i++) {
                 const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
-                luz.position.set(0, alturaTecho - 0.05, 2 - (i * 4));
+                luz.position.set(0, alturaTecho - 0.05, 4 - (i * 4));
                 scene.add(luz);
             }
         }
