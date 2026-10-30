@@ -97,11 +97,12 @@
             scene.add(cajaExterior);
 
             const loader = new GLTFLoader();
-            const basePath = window.location.origin + window.location.pathname.replace('index.html', '');
             
-            // --- RUTAS ACTUALIZADAS ---
-            const urlTipo = basePath + 'apartamento_tipo.glb'; 
-            const urlPenthouse = basePath + 'floorplan.glb'; // Nombre corregido sin la 't'
+            // --- LA SOLUCIÓN DEFINITIVA ---
+            // Forzamos la ruta absoluta de tu repositorio y le agregamos un ?v=1 
+            // para que el navegador no use la memoria y descargue el archivo fresco de internet.
+            const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
+            const urlPenthouse = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/floorplan.glb?v=1'; 
 
             loader.load(urlTipo, function (gltf) {
                 modeloAptoTipo = gltf.scene;
