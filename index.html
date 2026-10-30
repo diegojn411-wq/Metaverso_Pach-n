@@ -38,9 +38,10 @@
         let transicionEnCurso = false;
         let modeloApartamento, grupoPasillo, techoApt;
 
-        // Array para guardar los bloques invisibles de colisión
+        // Variables de colisión
         const cajasColision = [];
-        const radioJugador = 0.3; // Tamaño del cuerpo del jugador
+        const radioJugador = 0.25; // Más fino para que no se cuele
+        const alturaJugador = 1.6;
 
         init();
         animate();
@@ -139,53 +140,82 @@
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 });
             const matPared = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 });
             const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
             const matMetal = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.8, roughness: 0.2 });
 
             const largoPasillo = 12, anchoPasillo = 2.5, alturaTechoPasillo = 2.8;
 
+            // Pisos y Techos
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, largoPasillo/2); grupoPasillo.add(piso);
 
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, largoPasillo/2); grupoPasillo.add(techo);
 
+            // Paredes del pasillo (Visibles e Invisibles)
             const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredIzq.position.set(-anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2); grupoPasillo.add(paredIzq);
-            crearCajaColision(-anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2, 0.1, alturaTechoPasillo, largoPasillo);
+            crearCajaColision(-anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2, 0.2, alturaTechoPasillo, largoPasillo);
 
             const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredDer.position.set(anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2); grupoPasillo.add(paredDer);
-            crearCajaColision(anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2, 0.1, alturaTechoPasillo, largoPasillo);
+            crearCajaColision(anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2, 0.2, alturaTechoPasillo, largoPasillo);
 
+            // Marco de la puerta
+            const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
+            paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.5); grupoPasillo.add(paredFondoIzq);
+            crearCajaColision(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.5, (anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2);
+
+            const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
+            paredFondoDer.position.set(anchoPasillo/4 + 0.3, alturaTechoPasillo/2, 0.5); grupoPasillo.add(paredFondoDer);
+            crearCajaColision(anchoPasillo/4 + 0.3, alturaTechoPasillo/2, 0.5, (anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2);
+
+            const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTechoPasillo - 2.1, 0.2), matPared);
+            dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.5); grupoPasillo.add(dintel);
+
+            // LA PUERTA MARRÓN (Restaurada)
+            const hojaPuerta = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
+            hojaPuerta.position.set(-0.6, 1.05, 0.45); 
+            hojaPuerta.rotation.y = Math.PI / 2;
+            grupoPasillo.add(hojaPuerta);
+
+            // ELEVADOR
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10.5); grupoPasillo.add(pisoAsc);
 
-            // Paredes del ascensor
-            crearCajaColision(-1.25, 1.15, 10.5, 0.1, 2.3, 2.5);
-            crearCajaColision(1.25, 1.15, 10.5, 0.1, 2.3, 2.5);
-            crearCajaColision(0, 1.15, 11.75, 2.5, 2.3, 0.1);
+            // LAS PUERTAS METÁLICAS DEL ELEVADOR (Restauradas)
+            const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscIzq.position.set(-1.3, 1.15, 10.5); grupoPasillo.add(puertaAscIzq);
+            crearCajaColision(-1.3, 1.15, 10.5, 1.2, 2.3, 0.2);
+
+            const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscDer.position.set(1.3, 1.15, 10.5); grupoPasillo.add(puertaAscDer);
+            crearCajaColision(1.3, 1.15, 10.5, 1.2, 2.3, 0.2);
+
+            // Luces
+            for (let i = 0; i < 4; i++) {
+                const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
+                luz.position.set(0, alturaTechoPasillo - 0.05, 2 + (i * 3)); grupoPasillo.add(luz);
+            }
 
             scene.add(grupoPasillo);
         }
 
-        // Función para crear paredes invisibles
         function crearCajaColision(x, y, z, ancho, alto, profundidad) {
             const geometria = new THREE.BoxGeometry(ancho, alto, profundidad);
-            const material = new THREE.MeshBasicMaterial({ visible: false }); // Invisible
+            const material = new THREE.MeshBasicMaterial({ visible: false }); 
             const caja = new THREE.Mesh(geometria, material);
             caja.position.set(x, y, z);
             scene.add(caja);
             cajasColision.push(caja);
         }
 
-        // Función para crear el "caparazón" del apartamento
         function crearColisionesApartamento() {
-            // Creamos 4 paredes invisibles alrededor del apartamento en base a su tamaño (10x10)
-            // Ojo: Si entras y chocas con un muro en medio de la sala, tendremos que ajustar estas medidas.
-            crearCajaColision(0, 1.5, -5.2, 10, 3, 0.2);  // Pared Norte
-            crearCajaColision(0, 1.5, 5.2, 10, 3, 0.2);   // Pared Sur (detrás de ti al entrar)
-            crearCajaColision(-5.2, 1.5, 0, 0.2, 3, 10);  // Pared Oeste
-            crearCajaColision(5.2, 1.5, 0, 0.2, 3, 10);   // Pared Este
+            // Paredes maestras para que no te salgas del apartamento (basado en el tamaño de 10x10)
+            crearCajaColision(0, 1.5, -5.2, 10, 3, 0.2);  // Fondo
+            crearCajaColision(0, 1.5, 5.2, 10, 3, 0.2);   // Frente
+            crearCajaColision(-5.2, 1.5, 0, 0.2, 3, 10);  // Izquierda
+            crearCajaColision(5.2, 1.5, 0, 0.2, 3, 10);   // Derecha
         }
 
         function cambiarNivel() {
@@ -196,7 +226,6 @@
             fadeDiv.style.opacity = 1; 
 
             setTimeout(() => {
-                // Limpiamos colisiones viejas
                 cajasColision.forEach(caja => scene.remove(caja));
                 cajasColision.length = 0;
 
@@ -211,7 +240,7 @@
                     scene.background = new THREE.Color(0x87CEEB); 
                     scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
 
-                    crearColisionesApartamento(); // Creamos los muros del apartamento
+                    crearColisionesApartamento(); 
                 } else {
                     enElPasillo = true;
                     grupoPasillo.visible = true;
@@ -223,28 +252,31 @@
                     scene.background = new THREE.Color(0x1a1a1a);
                     scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
                     
-                    crearPasillo(); // Regeneramos colisiones del pasillo (o simplemente las dejamos, pero así es más limpio)
-                    // Nota: Al llamar a crearPasillo de nuevo, se duplica visualmente. Mejor no llamarlo, solo devolver cajas si quisiéramos.
+                    // RECONSTRUIR COLISIONES DEL PASILLO
+                    crearCajaColision(-1.25, 1.4, 6, 0.2, 2.8, 12); // Izquierda
+                    crearCajaColision(1.25, 1.4, 6, 0.2, 2.8, 12);  // Derecha
+                    crearCajaColision(-1.3, 1.15, 10.5, 1.2, 2.3, 0.2); // Ascensor Izq
+                    crearCajaColision(1.3, 1.15, 10.5, 1.2, 2.3, 0.2);  // Ascensor Der
                 }
 
                 setTimeout(() => { fadeDiv.style.opacity = 0; transicionEnCurso = false; }, 500);
             }, 500);
         }
 
-        // --- LÓGICA DE CHOQUE ---
+        // --- LÓGICA DE CHOQUE MEJORADA ---
         function verificarColisiones() {
             const pos = controls.getObject().position;
-            // El jugador está a 1.6m de altura, el centro de su cuerpo está a 0.8m
-            const jugadorBox = new THREE.Box3().setFromCenterAndSize(
-                new THREE.Vector3(pos.x, 0.8, pos.z), 
-                new THREE.Vector3(radioJugador * 2, 1.6, radioJugador * 2)
+            
+            // Creamos el cuerpo del jugador como una caja pegada al suelo
+            const jugadorBox = new THREE.Box3(
+                new THREE.Vector3(pos.x - radioJugador, 0, pos.z - radioJugador),
+                new THREE.Vector3(pos.x + radioJugador, alturaJugador, pos.z + radioJugador)
             );
 
             for (let i = 0; i < cajasColision.length; i++) {
                 const cajaBox = new THREE.Box3().setFromObject(cajasColision[i]);
                 if (jugadorBox.intersectsBox(cajaBox)) {
-                    // Hay choque. Rebotamos al jugador empujándolo hacia atrás
-                    return true;
+                    return true; // Hay choque
                 }
             }
             return false;
@@ -260,7 +292,6 @@
             requestAnimationFrame(animate);
 
             if (controls.isLocked === true && !transicionEnCurso) {
-                // Guardamos la posición anterior por si chocamos
                 const posAnterior = controls.getObject().position.clone();
 
                 velocity.x -= velocity.x * 10.0 * 0.016; 
@@ -273,14 +304,13 @@
                 if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
                 if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
 
-                // Movemos al jugador
                 controls.moveRight(-velocity.x * 0.016);
                 controls.moveForward(-velocity.z * 0.016);
 
                 // SI HAY CHOQUE, VOLVEMOS A LA POSICIÓN ANTERIOR
                 if (verificarColisiones()) {
                     controls.getObject().position.copy(posAnterior);
-                    velocity.set(0, 0, 0); // Detenemos el movimiento
+                    velocity.set(0, 0, 0); 
                 }
 
                 const pos = controls.getObject().position;
