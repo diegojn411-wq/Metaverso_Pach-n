@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Metaverso J.Pachón - Apartamento Muestra</title>
+    <title>Metaverso J.Pachón - Experiencia Inmersiva</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; }
         #info { 
@@ -39,7 +39,10 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        // Importamos las herramientas de física y colisiones
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+        import { Octree } from 'three/addons/math/Octree.js';
+        import { Capsule } from 'three/addons/math/Capsule.js';
 
         let camera, scene, renderer, controls;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
@@ -51,7 +54,16 @@
         
         let modeloApartamento;
         let grupoPasillo;
-        let techoApt; // Guardamos el techo para ajustarlo luego
+        let techoApt;
+
+        // --- CONFIGURACIÓN DE COLISIONES ---
+        const worldOctree = new Octree();
+        const playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1.6, 0), 0.35); // Cápsula que representa al jugador
+        const playerVelocity = new THREE.Vector3();
+        const playerDirection = new THREE.Vector3();
+        let playerOnFloor = false;
+
+        const GRAVITY = 30; // Fuerza de gravedad (por si hay escalones)
 
         init();
         animate();
@@ -129,23 +141,18 @@
                 modeloApartamento.visible = false; 
                 scene.add(modeloApartamento);
 
-                // --- EL TRUCO DEL TECHO ---
-                // Calculamos la altura real del modelo 3D y le sumamos 10 centímetros
-                // para que quede perfectamente apoyado sobre las paredes.
                 const alturaRealApt = size.y * scaleFactor + 0.1; 
 
                 techoApt = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
                 techoApt.rotation.x = Math.PI / 2;
-                // Usamos la altura calculada
                 techoApt.position.set(0, alturaRealApt, 0);
                 techoApt.name = "techoApt";
                 techoApt.visible = false;
                 scene.add(techoApt);
 
-                // Añadimos una caja exterior para que no se vea el cielo por las ventanas
                 const cajaExterior = new THREE.Mesh(
                     new THREE.BoxGeometry(20, 20, 20), 
-                    new THREE.MeshBasicMaterial({ color: 0x87CEEB, side: THREE.BackSide }) // Celeste por dentro
+                    new THREE.MeshBasicMaterial({ color: 0x87CEEB, side: THREE.BackSide })
                 );
                 cajaExterior.position.set(0, 10, 0);
                 cajaExterior.visible = false;
@@ -153,7 +160,13 @@
                 scene.add(cajaExterior);
 
                 crearPasillo();
+                
+                // ACTUALIZAR COLISIONES CON EL PASILLO
+                worldOctree.fromGraphNode(grupoPasillo);
+
                 controls.getObject().position.set(0, 1.6, 8); 
+                playerCollider.start.set(0, 0.35, 8);
+                playerCollider.end.set(0, 1.6, 8);
 
             }, undefined, function (error) {
                 document.getElementById('loading').innerText = "❌ Error al cargar el modelo.";
@@ -164,6 +177,7 @@
 
         function crearPasillo() {
             grupoPasillo = new THREE.Group();
+            // ... (Todo el código de creación del pasillo se mantiene igual) ...
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 });
             const matPared = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 });
             const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
@@ -174,9 +188,8 @@
             const anchoPasillo = 2.5;
             const alturaTechoPasillo = 2.8;
 
-            const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
-            piso.rotation.x = -Math.PI / 2;
-            piso.position.set(0, 0, largoPasillo/2);
+            const piso = new THREE.Mesh(new THREE.BoxGeometry(anchoPasillo, 0.1, largoPasillo), matPiso); // Lo hacemos caja para colisión
+            piso.position.set(0, -0.05, largoPasillo/2);
             grupoPasillo.add(piso);
 
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
@@ -209,9 +222,8 @@
             hojaPuerta.rotation.y = Math.PI / 2;
             grupoPasillo.add(hojaPuerta);
 
-            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
-            pisoAsc.rotation.x = -Math.PI / 2;
-            pisoAsc.position.set(0, 0.01, 10.5);
+            const pisoAsc = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 2.5), matMetal);
+            pisoAsc.position.set(0, -0.05, 10.5);
             grupoPasillo.add(pisoAsc);
 
             const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
@@ -239,16 +251,27 @@
             fadeDiv.style.opacity = 1; 
 
             setTimeout(() => {
+                // LIMPIAR COLISIONES ANTERIORES
+                worldOctree.clear(); 
+
                 if (enElPasillo) {
                     enElPasillo = false;
                     grupoPasillo.visible = false;
                     modeloApartamento.visible = true;
                     techoApt.visible = true;
-                    scene.getObjectByName("cajaExterior").visible = true; // Mostrar cielo exterior falso
+                    scene.getObjectByName("cajaExterior").visible = true; 
                     
                     controls.getObject().position.set(0, 1.6, 3); 
+                    playerCollider.start.set(0, 0.35, 3);
+                    playerCollider.end.set(0, 1.6, 3);
+
                     scene.background = new THREE.Color(0x87CEEB); 
                     scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
+
+                    // GENERAR COLISIONES DEL APARTAMENTO
+                    // Esto lee todo el modelo 3D (paredes, muebles) y crea barreras
+                    worldOctree.fromGraphNode(modeloApartamento);
+
                 } else {
                     enElPasillo = true;
                     grupoPasillo.visible = true;
@@ -257,8 +280,14 @@
                     scene.getObjectByName("cajaExterior").visible = false; 
                     
                     controls.getObject().position.set(0, 1.6, 2); 
+                    playerCollider.start.set(0, 0.35, 2);
+                    playerCollider.end.set(0, 1.6, 2);
+
                     scene.background = new THREE.Color(0x1a1a1a);
                     scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
+
+                    // GENERAR COLISIONES DEL PASILLO
+                    worldOctree.fromGraphNode(grupoPasillo);
                 }
 
                 setTimeout(() => {
@@ -268,30 +297,68 @@
             }, 500);
         }
 
+        // --- FUNCIONES DE FÍSICA ---
+        function playerCollisions() {
+            const result = worldOctree.capsuleIntersect(playerCollider);
+            playerOnFloor = false;
+            if (result) {
+                playerOnFloor = result.normal.y > 0;
+                if (!playerOnFloor) {
+                    playerVelocity.addScaledVector(result.normal, -result.normal.dot(playerVelocity));
+                }
+                // Empujar al jugador fuera de la pared
+                playerCollider.translate(result.normal.multiplyScalar(result.depth));
+            }
+        }
+
+        function updatePlayer(deltaTime) {
+            let damping = Math.exp(-4 * deltaTime) - 1;
+            if (!playerOnFloor) {
+                playerVelocity.y -= GRAVITY * deltaTime;
+                damping *= 0.1; // Menos resistencia en el aire
+            }
+
+            playerVelocity.addScaledVector(playerVelocity, damping);
+
+            const deltaPosition = playerVelocity.clone().multiplyScalar(deltaTime);
+            playerCollider.translate(deltaPosition);
+
+            playerCollisions();
+
+            // Sincronizar cámara con el cuerpo físico
+            camera.position.copy(playerCollider.end);
+        }
+
+        function getForwardVector() { const cameraEuler = new THREE.Euler(0, 0, 0, 'YXZ'); cameraEuler.setFromQuaternion(camera.quaternion); cameraEuler.x = 0; cameraEuler.z = 0; return new THREE.Vector3(0, 0, -1).applyEuler(cameraEuler); }
+        function getSideVector() { const cameraEuler = new THREE.Euler(0, 0, 0, 'YXZ'); cameraEuler.setFromQuaternion(camera.quaternion); cameraEuler.x = 0; cameraEuler.z = 0; return new THREE.Vector3(1, 0, 0).applyEuler(cameraEuler); }
+
+        function controlsUpdate(deltaTime) {
+            const speedDelta = deltaTime * (playerOnFloor ? 25 : 8);
+
+            if (moveForward) playerVelocity.add(getForwardVector().multiplyScalar(speedDelta));
+            if (moveBackward) playerVelocity.add(getForwardVector().multiplyScalar(-speedDelta));
+            if (moveLeft) playerVelocity.add(getSideVector().multiplyScalar(-speedDelta));
+            if (moveRight) playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
+        }
+
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
+        const clock = new THREE.Clock();
+
         function animate() {
             requestAnimationFrame(animate);
+            const deltaTime = Math.min(0.05, clock.getDelta());
 
             if (controls.isLocked === true && !transicionEnCurso) {
-                velocity.x -= velocity.x * 10.0 * 0.016; 
-                velocity.z -= velocity.z * 10.0 * 0.016;
+                controlsUpdate(deltaTime);
+                updatePlayer(deltaTime);
 
-                direction.z = Number(moveForward) - Number(moveBackward);
-                direction.x = Number(moveRight) - Number(moveLeft);
-                direction.normalize();
-
-                if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
-                if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
-
-                controls.moveRight(-velocity.x * 0.016);
-                controls.moveForward(-velocity.z * 0.016);
-
-                const pos = controls.getObject().position;
+                // Portal detection (usando la cápsula)
+                const pos = playerCollider.end;
                 if (enElPasillo && pos.z < 1.0) {
                     cambiarNivel(); 
                 } else if (!enElPasillo && pos.z > 5.0) {
