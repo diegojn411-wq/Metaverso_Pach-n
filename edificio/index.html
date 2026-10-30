@@ -43,9 +43,6 @@
         let portalFondo, portalIzq, portalDer;
         let techoTipo, techoPenthouse;
 
-        let dimsTipo = { width: 10, depth: 10, height: 3 };
-        let dimsPenthouse = { width: 10, depth: 10, height: 3 };
-
         init();
         animate();
 
@@ -110,7 +107,7 @@
                 modeloAptoTipo = gltf.scene;
                 grupoAptoTipo = new THREE.Group();
                 grupoAptoTipo.add(modeloAptoTipo);
-                dimsTipo = configurarModelo(grupoAptoTipo, false);
+                configurarModelo(grupoAptoTipo, false);
                 grupoAptoTipo.visible = false;
                 scene.add(grupoAptoTipo);
                 
@@ -128,20 +125,12 @@
                     grupoPenthouse = new THREE.Group();
                     grupoPenthouse.add(modeloPenthouse);
                     
-                    // Rotamos el penthouse para que quede de pie
+                    // LO PONEMOS DE PIE
                     grupoPenthouse.rotation.z = Math.PI / 2; 
                     
-                    dimsPenthouse = configurarModelo(grupoPenthouse, true); 
+                    configurarModelo(grupoPenthouse, true); 
                     grupoPenthouse.visible = false;
                     scene.add(grupoPenthouse);
-
-                    const boxP = new THREE.Box3().setFromObject(grupoPenthouse);
-                    const sizeP = boxP.getSize(new THREE.Vector3());
-                    techoPenthouse = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
-                    techoPenthouse.rotation.x = Math.PI / 2;
-                    techoPenthouse.position.set(0, sizeP.y + 0.1, 0);
-                    techoPenthouse.visible = false;
-                    scene.add(techoPenthouse);
 
                     document.getElementById('loading').style.display = 'none';
                     crearPasillo();
@@ -166,11 +155,11 @@
             const scaleFactor = 10 / maxSize; 
             grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
             
+            // EL TRUCO: Forzar a que el punto más bajo del modelo quede en Y=0
+            const boxFinal = new THREE.Box3().setFromObject(grupo);
             grupo.position.x = -center.x * scaleFactor;
-            grupo.position.y = -box.min.y * scaleFactor; 
+            grupo.position.y = -boxFinal.min.y; // Esto asegura que toque el piso
             grupo.position.z = -center.z * scaleFactor;
-
-            return { width: size.x * scaleFactor, depth: size.z * scaleFactor, height: size.y * scaleFactor };
         }
 
         function crearPasillo() {
@@ -286,17 +275,16 @@
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
+                // Reseteamos la cámara a la normalidad absoluta
                 controls.getObject().rotation.set(0, 0, 0);
 
                 if (destino === "penthouse") {
                     ubicacionActual = "penthouse";
                     grupoPenthouse.visible = true;
-                    techoPenthouse.visible = true;
                     cajaExterior.visible = true;
                     
-                    // EL TRUCO FINAL: La cámara se posiciona en el centro del penthouse
-                    // Usamos la profundidad calculada (dimsPenthouse.depth) para meterla hacia adentro
-                    controls.getObject().position.set(0, 1.6, dimsPenthouse.depth / 2 - 2); 
+                    // APARECEMOS EXACTAMENTE DENTRO DEL PISO DEL PENTHOUSE
+                    controls.getObject().position.set(0, 1.6, 2); 
                     
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
