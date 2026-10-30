@@ -96,27 +96,38 @@
             cajaExterior.visible = false;
             scene.add(cajaExterior);
 
+            // --- LA SOLUCIÓN DEFINITIVA: FETCH BINARIO ---
+            // Descargamos el archivo manualmente y luego se lo pasamos al lector 3D
             const loader = new GLTFLoader();
-            
-            // Forzamos la carga con un parámetro extra en la URL para evitar la caché
-            const urlTipo = './apartamento_tipo.glb?v=2'; 
-            const urlPenthouse = './penthouse.glb?v=2';
 
-            loader.load(urlTipo, function (gltf) {
-                modeloAptoTipo = gltf.scene;
-                configurarModelo(modeloAptoTipo);
-                modeloAptoTipo.visible = false;
-                scene.add(modeloAptoTipo);
-                
-                const box = new THREE.Box3().setFromObject(modeloAptoTipo);
-                const size = box.getSize(new THREE.Vector3());
-                techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
-                techoTipo.rotation.x = Math.PI / 2;
-                techoTipo.position.set(0, (size.y * modeloAptoTipo.scale.y) + 0.1, 0);
-                techoTipo.visible = false;
-                scene.add(techoTipo);
+            async function cargarModelo(url) {
+                const respuesta = await fetch(url);
+                if (!respuesta.ok) throw new Error(`HTTP error! status: ${respuesta.status}`);
+                const arrayBuffer = await respuesta.arrayBuffer();
+                return new Promise((resolve, reject) => {
+                    loader.parse(arrayBuffer, './', resolve, reject);
+                });
+            }
 
-                loader.load(urlPenthouse, function (gltfP) {
+            async function iniciarCarga() {
+                try {
+                    // 1. Cargar tipo
+                    const gltfTipo = await cargarModelo('./apartamento_tipo.glb');
+                    modeloAptoTipo = gltfTipo.scene;
+                    configurarModelo(modeloAptoTipo);
+                    modeloAptoTipo.visible = false;
+                    scene.add(modeloAptoTipo);
+                    
+                    const box = new THREE.Box3().setFromObject(modeloAptoTipo);
+                    const size = box.getSize(new THREE.Vector3());
+                    techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+                    techoTipo.rotation.x = Math.PI / 2;
+                    techoTipo.position.set(0, (size.y * modeloAptoTipo.scale.y) + 0.1, 0);
+                    techoTipo.visible = false;
+                    scene.add(techoTipo);
+
+                    // 2. Cargar Penthouse
+                    const gltfP = await cargarModelo('./penthouse.glb');
                     modeloPenthouse = gltfP.scene;
                     configurarModelo(modeloPenthouse);
                     modeloPenthouse.visible = false;
@@ -130,21 +141,22 @@
                     techoPenthouse.visible = false;
                     scene.add(techoPenthouse);
 
+                    // 3. Todo listo
                     document.getElementById('loading').style.display = 'none';
                     crearPasillo();
                     controls.getObject().position.set(0, 1.6, 10); 
-                }, undefined, function (error) {
-                    document.getElementById('loading').innerText = "❌ Error al cargar penthouse.glb (Revisa que exista y tenga extensión .glb)";
-                });
-                
-            }, undefined, function (error) {
-                document.getElementById('loading').innerText = "❌ Error al cargar apartamento_tipo.glb (Revisa que exista y tenga extensión .glb)";
-            });
+
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('loading').innerText = "❌ Error de carga. Revisa la consola F12.";
+                }
+            }
+
+            iniciarCarga();
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        // ... (El resto de las funciones configurarModelo, crearPasillo, aplicarFiltroColor, cambiarNivel, onWindowResize y animate son EXACTAMENTE IGUALES al código anterior) ...
         function configurarModelo(modelo) {
             const box = new THREE.Box3().setFromObject(modelo);
             const size = box.getSize(new THREE.Vector3());
@@ -157,6 +169,7 @@
             modelo.position.z = -center.z * scaleFactor;
         }
 
+        // ... (Las funciones crearPasillo, aplicarFiltroColor, cambiarNivel, onWindowResize y animate son exactamente iguales) ...
         function crearPasillo() {
             grupoPasillo = new THREE.Group();
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
