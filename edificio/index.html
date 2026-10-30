@@ -55,7 +55,6 @@
             scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // Forzamos a la cámara a siempre tener el "arriba" en el eje Y (cielo)
             camera.up.set(0, 1, 0);
 
             ambientLight = new THREE.AmbientLight(0xffeedd, 1.2); 
@@ -128,8 +127,11 @@
                     modeloPenthouse = gltfP.scene;
                     grupoPenthouse = new THREE.Group();
                     grupoPenthouse.add(modeloPenthouse);
-                    // Lo dejamos plano, sin rotaciones
-                    dimsPenthouse = configurarModelo(grupoPenthouse, false); 
+                    
+                    // ROTACIÓN: Lo ponemos de pie
+                    grupoPenthouse.rotation.x = -Math.PI / 2; 
+                    
+                    dimsPenthouse = configurarModelo(grupoPenthouse, true); 
                     grupoPenthouse.visible = false;
                     scene.add(grupoPenthouse);
 
@@ -172,7 +174,6 @@
         }
 
         function crearPasillo() {
-            // ... (El mismo código del pasillo)
             grupoPasillo = new THREE.Group();
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
             const matPared = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 }); 
@@ -285,7 +286,7 @@
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
-                // Siempre reseteamos la rotación de la cámara
+                // Reseteamos la cámara
                 controls.getObject().rotation.set(0, 0, 0);
 
                 if (destino === "penthouse") {
@@ -293,8 +294,8 @@
                     grupoPenthouse.visible = true;
                     techoPenthouse.visible = true;
                     cajaExterior.visible = true;
-                    // CAMBIO AQUÍ: Cámara centrada y mirando al fondo
-                    controls.getObject().position.set(0, 1.6, 4); 
+                    // Cámara al centro del penthouse (ajustado para su nuevo tamaño)
+                    controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
                 } 
@@ -303,7 +304,6 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
-                    // CAMBIO AQUÍ: Cámara en el centro, altura de ojos
                     controls.getObject().position.set(0, 1.6, 4); 
                     ambientLight.color.setHex(0xffaa77); 
                     ambientLight.intensity = 2.0;
@@ -314,7 +314,6 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
-                    // CAMBIO AQUÍ: Cámara en el centro, altura de ojos
                     controls.getObject().position.set(0, 1.6, 4); 
                     ambientLight.color.setHex(0x88bbff); 
                     ambientLight.intensity = 1.5;
