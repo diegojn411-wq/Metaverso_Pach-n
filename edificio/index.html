@@ -37,10 +37,10 @@
         let ubicacionActual = "pasillo"; 
         let transicionEnCurso = false;
         
-        // Variables para guardar los dos modelos
-        let modeloAptoTipo, modeloPenthouse, modeloVisibleActual;
-        let grupoPasillo, techoApt, cajaExterior, ambientLight;
+        let modeloAptoTipo, modeloPenthouse;
+        let grupoPasillo, ambientLight, cajaExterior;
         let portalFondo, portalIzq, portalDer;
+        let techoTipo, techoPenthouse;
 
         init();
         animate();
@@ -91,53 +91,73 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
 
-            // EL NUEVO CARGADOR MÚLTIPLE
+            cajaExterior = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), new THREE.MeshBasicMaterial({ color: 0x87CEEB, side: THREE.BackSide }));
+            cajaExterior.position.set(0, 10, 0);
+            cajaExterior.visible = false;
+            scene.add(cajaExterior);
+
             const loader = new GLTFLoader();
             
-            // 1. Cargar el apartamento tipo (el que ya teníamos)
-            loader.load('./apartamento_tipo.glb', function (gltf) {
+            // Forzamos la carga con un parámetro extra en la URL para evitar la caché
+            const urlTipo = './apartamento_tipo.glb?v=2'; 
+            const urlPenthouse = './penthouse.glb?v=2';
+
+            loader.load(urlTipo, function (gltf) {
                 modeloAptoTipo = gltf.scene;
                 configurarModelo(modeloAptoTipo);
                 modeloAptoTipo.visible = false;
                 scene.add(modeloAptoTipo);
                 
-                // 2. Cargar el penthouse
-                loader.load('./penthouse.glb', function (gltfP) {
+                const box = new THREE.Box3().setFromObject(modeloAptoTipo);
+                const size = box.getSize(new THREE.Vector3());
+                techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+                techoTipo.rotation.x = Math.PI / 2;
+                techoTipo.position.set(0, (size.y * modeloAptoTipo.scale.y) + 0.1, 0);
+                techoTipo.visible = false;
+                scene.add(techoTipo);
+
+                loader.load(urlPenthouse, function (gltfP) {
                     modeloPenthouse = gltfP.scene;
                     configurarModelo(modeloPenthouse);
                     modeloPenthouse.visible = false;
                     scene.add(modeloPenthouse);
-                    
+
+                    const boxP = new THREE.Box3().setFromObject(modeloPenthouse);
+                    const sizeP = boxP.getSize(new THREE.Vector3());
+                    techoPenthouse = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+                    techoPenthouse.rotation.x = Math.PI / 2;
+                    techoPenthouse.position.set(0, (sizeP.y * modeloPenthouse.scale.y) + 0.1, 0);
+                    techoPenthouse.visible = false;
+                    scene.add(techoPenthouse);
+
                     document.getElementById('loading').style.display = 'none';
                     crearPasillo();
                     controls.getObject().position.set(0, 1.6, 10); 
                 }, undefined, function (error) {
-                    document.getElementById('loading').innerText = "❌ Error al cargar el penthouse.";
+                    document.getElementById('loading').innerText = "❌ Error al cargar penthouse.glb (Revisa que exista y tenga extensión .glb)";
                 });
                 
             }, undefined, function (error) {
-                document.getElementById('loading').innerText = "❌ Error al cargar el apartamento tipo.";
+                document.getElementById('loading').innerText = "❌ Error al cargar apartamento_tipo.glb (Revisa que exista y tenga extensión .glb)";
             });
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        // Función para centrar y escalar cualquier modelo automáticamente
+        // ... (El resto de las funciones configurarModelo, crearPasillo, aplicarFiltroColor, cambiarNivel, onWindowResize y animate son EXACTAMENTE IGUALES al código anterior) ...
         function configurarModelo(modelo) {
             const box = new THREE.Box3().setFromObject(modelo);
             const size = box.getSize(new THREE.Vector3());
             const center = box.getCenter(new THREE.Vector3());
             const maxSize = Math.max(size.x, size.y, size.z);
-            const scaleFactor = 10 / maxSize; // Escala a 10 metros
-            
+            const scaleFactor = 10 / maxSize; 
             modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
             modelo.position.x = -center.x * scaleFactor;
-            modelo.position.y = -box.min.y * scaleFactor; // Lo pega al suelo
+            modelo.position.y = -box.min.y * scaleFactor; 
             modelo.position.z = -center.z * scaleFactor;
         }
 
         function crearPasillo() {
-            // ... (El mismo código del pasillo que ya teníamos)
             grupoPasillo = new THREE.Group();
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
             const matPared = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 }); 
@@ -146,9 +166,7 @@
             const matPuerta = new THREE.MeshStandardMaterial({ color: 0x3a1e0c, roughness: 0.5 }); 
             const matMetal = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.9, roughness: 0.1 }); 
 
-            const largoPasillo = 10;
-            const anchoPasillo = 3.0; 
-            const alturaTechoPasillo = 2.8;
+            const largoPasillo = 10, anchoPasillo = 3.0, alturaTechoPasillo = 2.8;
 
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 5); grupoPasillo.add(piso);
@@ -217,7 +235,6 @@
             for (let i = 0; i < 3; i++) {
                 const lampara = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 0.2, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
                 lampara.position.set(0, alturaTechoPasillo - 0.1, 3 + (i * 2.5)); grupoPasillo.add(lampara);
-                
                 const luzP = new THREE.PointLight(0xffffcc, 1, 4);
                 luzP.position.set(0, alturaTechoPasillo - 0.2, 3 + (i * 2.5)); grupoPasillo.add(luzP);
             }
@@ -246,65 +263,56 @@
             fadeDiv.style.opacity = 1; 
 
             setTimeout(() => {
-                if (destino === "apto1" || destino === "apto2" || destino === "apto3") {
-                    ubicacionActual = destino;
-                    grupoPasillo.visible = false;
-                    techoApt.visible = true;
-                    cajaExterior.visible = true;
-                    
-                    scene.background = new THREE.Color(0x87CEEB); 
-                    scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
+                grupoPasillo.visible = false;
+                modeloAptoTipo.visible = false;
+                modeloPenthouse.visible = false;
+                techoTipo.visible = false;
+                techoPenthouse.visible = false;
+                cajaExterior.visible = false;
 
-                    // LÓGICA DE CARGA DE MODELOS
-                    if (destino === "apto1") {
-                        // PENTHOUSE (Fondo)
-                        modeloAptoTipo.visible = false;
-                        modeloPenthouse.visible = true;
-                        modeloVisibleActual = modeloPenthouse;
-                        
-                        controls.getObject().position.set(0, 1.6, 3); 
-                        ambientLight.color.setHex(0xffffff); 
-                        ambientLight.intensity = 1.5;
-                    } 
-                    else if (destino === "apto2") {
-                        // TIPO CÁLIDO (Derecha)
-                        modeloPenthouse.visible = false;
-                        modeloAptoTipo.visible = true;
-                        modeloVisibleActual = modeloAptoTipo;
-                        
-                        controls.getObject().position.set(-2, 1.6, 4); 
-                        ambientLight.color.setHex(0xffaa77); 
-                        ambientLight.intensity = 2.0;
-                        aplicarFiltroColor(modeloAptoTipo, 0xffaa77, 0.4); 
-                    } 
-                    else if (destino === "apto3") {
-                        // TIPO FRÍO (Izquierda)
-                        modeloPenthouse.visible = false;
-                        modeloAptoTipo.visible = true;
-                        modeloVisibleActual = modeloAptoTipo;
-                        
-                        controls.getObject().position.set(2, 1.6, 4); 
-                        ambientLight.color.setHex(0x88bbff); 
-                        ambientLight.intensity = 1.5;
-                        aplicarFiltroColor(modeloAptoTipo, 0x88bbff, 0.4); 
-                    }
+                if (destino === "penthouse") {
+                    ubicacionActual = "penthouse";
+                    modeloPenthouse.visible = true;
+                    techoPenthouse.visible = true;
+                    cajaExterior.visible = true;
+                    controls.getObject().position.set(0, 1.6, 4); 
+                    ambientLight.color.setHex(0xffffff); 
+                    ambientLight.intensity = 1.5;
                 } 
+                else if (destino === "apto2") {
+                    ubicacionActual = "apto2";
+                    modeloAptoTipo.visible = true;
+                    techoTipo.visible = true;
+                    cajaExterior.visible = true;
+                    controls.getObject().position.set(-2, 1.6, 4); 
+                    ambientLight.color.setHex(0xffaa77); 
+                    ambientLight.intensity = 2.0;
+                    aplicarFiltroColor(modeloAptoTipo, 0xffaa77, 0.4); 
+                } 
+                else if (destino === "apto3") {
+                    ubicacionActual = "apto3";
+                    modeloAptoTipo.visible = true;
+                    techoTipo.visible = true;
+                    cajaExterior.visible = true;
+                    controls.getObject().position.set(2, 1.6, 4); 
+                    ambientLight.color.setHex(0x88bbff); 
+                    ambientLight.intensity = 1.5;
+                    aplicarFiltroColor(modeloAptoTipo, 0x88bbff, 0.4); 
+                }
                 else if (destino === "pasillo") {
                     ubicacionActual = "pasillo";
                     grupoPasillo.visible = true;
-                    modeloAptoTipo.visible = false;
-                    modeloPenthouse.visible = false;
-                    techoApt.visible = false;
-                    cajaExterior.visible = false; 
-                    
                     controls.getObject().position.set(0, 1.6, 1.5); 
-                    
                     scene.background = new THREE.Color(0x1a1a1a);
                     scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
                     ambientLight.color.setHex(0xffeedd); 
                     ambientLight.intensity = 1.2;
-                    
                     aplicarFiltroColor(modeloAptoTipo, 0xffffff, 0);
+                }
+
+                if (destino !== "pasillo") {
+                    scene.background = new THREE.Color(0x87CEEB); 
+                    scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
                 }
 
                 setTimeout(() => { fadeDiv.style.opacity = 0; transicionEnCurso = false; }, 500);
@@ -343,7 +351,7 @@
                     );
 
                     if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalFondo))) {
-                        cambiarNivel("apto1");
+                        cambiarNivel("penthouse");
                     }
                     if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalDer))) {
                         cambiarNivel("apto2");
@@ -352,8 +360,8 @@
                         cambiarNivel("apto3");
                     }
                 } 
-                else if (ubicacionActual === "apto1" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
-                    if (pos.z > 6.0) {
+                else if (ubicacionActual === "penthouse" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
+                    if (pos.z > 7.0) {
                         cambiarNivel("pasillo"); 
                     }
                 }
