@@ -286,7 +286,6 @@
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
-                // Reseteamos la cámara a su estado natural
                 controls.getObject().rotation.set(0, 0, 0);
 
                 if (destino === "penthouse") {
@@ -294,8 +293,10 @@
                     grupoPenthouse.visible = true;
                     techoPenthouse.visible = true;
                     cajaExterior.visible = true;
-                    // Cámara centrada
-                    controls.getObject().position.set(0, 1.6, 3); 
+                    
+                    // --- AQUÍ ESTÁ EL CAMBIO: Cámara al centro del penthouse ---
+                    controls.getObject().position.set(0, 1.6, -8); 
+                    
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
                 } 
