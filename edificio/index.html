@@ -123,7 +123,6 @@
 
                 crearPasillo();
                 
-                // Inicio en el ascensor
                 controls.getObject().position.set(0, 1.6, 10); 
 
             }, undefined, function (error) {
@@ -143,33 +142,25 @@
             const matMetal = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.9, roughness: 0.1 }); 
 
             const largoPasillo = 10;
-            const anchoPasillo = 3.0; // Un poco más ancho para que no se sienta claustrofóbico
+            const anchoPasillo = 3.0; 
             const alturaTechoPasillo = 2.8;
 
-            // Piso y Techo
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 5); grupoPasillo.add(piso);
 
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
 
-            // --- PARED IZQUIERDA (Con hueco para la puerta) ---
-            // Tramo 1 (Desde el elevador hasta la puerta)
             const paredIzq1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4), matPared);
             paredIzq1.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 8); grupoPasillo.add(paredIzq1);
-            // Tramo 2 (Desde la puerta hasta el fondo)
             const paredIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4.5), matPared);
             paredIzq2.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 2.25); grupoPasillo.add(paredIzq2);
 
-            // --- PARED DERECHA (Con hueco para la puerta) ---
-            // Tramo 1
             const paredDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4), matPared);
             paredDer1.position.set(anchoPasillo/2, alturaTechoPasillo/2, 8); grupoPasillo.add(paredDer1);
-            // Tramo 2
             const paredDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4.5), matPared);
             paredDer2.position.set(anchoPasillo/2, alturaTechoPasillo/2, 2.25); grupoPasillo.add(paredDer2);
 
-            // --- PUERTA CENTRAL (Fondo Z=0) ---
             const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
             paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoIzq);
             const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
@@ -177,20 +168,17 @@
             const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTechoPasillo - 2.1, 0.2), matPared);
             dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.1); grupoPasillo.add(dintel);
 
-            // Marco y puerta central
             const marcoFondo = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.2, 0.1), matMarco);
             marcoFondo.position.set(0, 1.1, 0.15); grupoPasillo.add(marcoFondo);
             const hojaPuerta1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
             hojaPuerta1.position.set(-0.6, 1.05, 0.2); hojaPuerta1.rotation.y = Math.PI / 2; grupoPasillo.add(hojaPuerta1);
             
-            // Luz saliendo de la puerta central
             const luzPuerta1 = new THREE.PointLight(0xffaa55, 2, 5);
             luzPuerta1.position.set(0, 1.0, 0.5); grupoPasillo.add(luzPuerta1);
 
             portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
             portalFondo.position.set(0, 1.05, 0.2); grupoPasillo.add(portalFondo);
 
-            // --- PUERTA DERECHA (Lateral Z=5) ---
             const marcoDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 1.3), matMarco);
             marcoDer.position.set(anchoPasillo/2, 1.1, 5); grupoPasillo.add(marcoDer);
             const puertaDer = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 1.0), matPuerta);
@@ -199,7 +187,6 @@
             portalDer = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
             portalDer.position.set(anchoPasillo/2, 1.05, 5); grupoPasillo.add(portalDer);
 
-            // --- PUERTA IZQUIERDA (Lateral Z=5) ---
             const marcoIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 1.3), matMarco);
             marcoIzq.position.set(-anchoPasillo/2, 1.1, 5); grupoPasillo.add(marcoIzq);
             const puertaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 1.0), matPuerta);
@@ -208,7 +195,6 @@
             portalIzq = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
             portalIzq.position.set(-anchoPasillo/2, 1.05, 5); grupoPasillo.add(portalIzq);
 
-            // --- ELEVADOR (Z=10) ---
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10); grupoPasillo.add(pisoAsc);
 
@@ -223,7 +209,6 @@
             const huecoAsc = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.2), matTecho);
             huecoAsc.position.set(0, 1.1, 10.05); grupoPasillo.add(huecoAsc); 
 
-            // Lámparas colgantes
             for (let i = 0; i < 3; i++) {
                 const lampara = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 0.2, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
                 lampara.position.set(0, alturaTechoPasillo - 0.1, 3 + (i * 2.5)); grupoPasillo.add(lampara);
@@ -233,6 +218,23 @@
             }
 
             scene.add(grupoPasillo);
+        }
+
+        // Función para aplicar un filtro de color a todo el apartamento
+        function aplicarFiltroColor(colorHex, intensidad) {
+            modeloApartamento.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    // Si el material no tiene color original guardado, lo guardamos
+                    if (!child.userData.colorOriginal) {
+                        child.userData.colorOriginal = child.material.color.clone();
+                    }
+                    
+                    // Aplicamos el nuevo color mezclándolo con el original
+                    const nuevoColor = child.userData.colorOriginal.clone();
+                    nuevoColor.lerp(new THREE.Color(colorHex), intensidad);
+                    child.material.color.copy(nuevoColor);
+                }
+            });
         }
 
         function cambiarNivel(destino) {
@@ -250,21 +252,30 @@
                     techoApt.visible = true;
                     cajaExterior.visible = true;
                     
-                    // Teletransporte al interior del apartamento
-                    controls.getObject().position.set(0, 1.6, 3); 
                     scene.background = new THREE.Color(0x87CEEB); 
                     scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
                     
-                    // Diferentes colores e intensidades de luz para cada apartamento
+                    // Lógica de colores y perspectivas
                     if (destino === "apto1") {
-                        ambientLight.color.setHex(0xffffff); // Luz natural
+                        // FONDO: Aspecto original (Blanco/Madera)
+                        controls.getObject().position.set(0, 1.6, 3); 
+                        ambientLight.color.setHex(0xffffff); 
                         ambientLight.intensity = 1.5;
-                    } else if (destino === "apto2") {
-                        ambientLight.color.setHex(0xffddaa); // Luz cálida (atardecer)
-                        ambientLight.intensity = 1.8;
-                    } else if (destino === "apto3") {
-                        ambientLight.color.setHex(0xaaddff); // Luz fría (día nublado)
-                        ambientLight.intensity = 1.2;
+                        aplicarFiltroColor(0xffffff, 0); // Sin filtro, colores reales
+                    } 
+                    else if (destino === "apto2") {
+                        // DERECHA: Estilo Cálido (Atardecer)
+                        controls.getObject().position.set(-2, 1.6, 4); // Aparece un poco a la izquierda
+                        ambientLight.color.setHex(0xffaa77); 
+                        ambientLight.intensity = 2.0;
+                        aplicarFiltroColor(0xffaa77, 0.4); // Tinte rojizo en los muebles
+                    } 
+                    else if (destino === "apto3") {
+                        // IZQUIERDA: Estilo Frío/Minimalista (Azul)
+                        controls.getObject().position.set(2, 1.6, 4); // Aparece un poco a la derecha
+                        ambientLight.color.setHex(0x88bbff); 
+                        ambientLight.intensity = 1.5;
+                        aplicarFiltroColor(0x88bbff, 0.4); // Tinte azulado en los muebles
                     }
                 } 
                 else if (destino === "pasillo") {
@@ -274,13 +285,15 @@
                     techoApt.visible = false;
                     cajaExterior.visible = false; 
                     
-                    // Aparecer en el pasillo justo en la puerta central
                     controls.getObject().position.set(0, 1.6, 1.5); 
                     
                     scene.background = new THREE.Color(0x1a1a1a);
                     scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
                     ambientLight.color.setHex(0xffeedd); 
                     ambientLight.intensity = 1.2;
+                    
+                    // Restaurar colores originales del apartamento
+                    aplicarFiltroColor(0xffffff, 0);
                 }
 
                 setTimeout(() => { fadeDiv.style.opacity = 0; transicionEnCurso = false; }, 500);
@@ -318,22 +331,18 @@
                         new THREE.Vector3(0.4, 1.8, 0.4)
                     );
 
-                    // Choque con la puerta del fondo
                     if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalFondo))) {
                         cambiarNivel("apto1");
                     }
-                    // Choque con la puerta derecha
                     if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalDer))) {
                         cambiarNivel("apto2");
                     }
-                    // Choque con la puerta izquierda
                     if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalIzq))) {
                         cambiarNivel("apto3");
                     }
                 } 
                 else if (ubicacionActual === "apto1" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
-                    // Si caminas hacia atrás dentro del apartamento, vuelves al pasillo
-                    if (pos.z > 5.0) {
+                    if (pos.z > 6.0) { // Ajustado para que puedas caminar un poco más antes de salir
                         cambiarNivel("pasillo"); 
                     }
                 }
