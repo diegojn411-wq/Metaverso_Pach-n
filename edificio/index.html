@@ -38,6 +38,7 @@
         let transicionEnCurso = false;
         
         let modeloAptoTipo, modeloPenthouse;
+        let grupoAptoTipo, grupoPenthouse; // CONTENEDORES MÁGICOS
         let grupoPasillo, ambientLight, cajaExterior;
         let portalFondo, portalIzq, portalDer;
         let techoTipo, techoPenthouse;
@@ -100,30 +101,41 @@
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
             const urlPenthouse = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/floorplan.glb?v=1'; 
 
+            // --- CARGAR APARTAMENTO TIPO ---
             loader.load(urlTipo, function (gltf) {
                 modeloAptoTipo = gltf.scene;
-                configurarModelo(modeloAptoTipo);
-                modeloAptoTipo.visible = false;
-                scene.add(modeloAptoTipo);
                 
-                const box = new THREE.Box3().setFromObject(modeloAptoTipo);
+                grupoAptoTipo = new THREE.Group();
+                grupoAptoTipo.add(modeloAptoTipo);
+                configurarModelo(grupoAptoTipo, false);
+                grupoAptoTipo.visible = false;
+                scene.add(grupoAptoTipo);
+                
+                const box = new THREE.Box3().setFromObject(grupoAptoTipo);
                 const size = box.getSize(new THREE.Vector3());
                 techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
                 techoTipo.rotation.x = Math.PI / 2;
-                techoTipo.position.set(0, (size.y * modeloAptoTipo.scale.y) + 0.1, 0);
+                techoTipo.position.set(0, (size.y) + 0.1, 0);
                 techoTipo.visible = false;
                 scene.add(techoTipo);
 
+                // --- CARGAR PENTHOUSE ---
                 loader.load(urlPenthouse, function (gltfP) {
                     modeloPenthouse = gltfP.scene;
-                    configurarModelo(modeloPenthouse);
-                    modeloPenthouse.visible = false;
-                    scene.add(modeloPenthouse);
+                    
+                    grupoPenthouse = new THREE.Group();
+                    grupoPenthouse.add(modeloPenthouse);
+                    
+                    // AQUÍ APLICAMOS LA ROTACIÓN AL CONTENEDOR, NO AL MODELO
+                    configurarModelo(grupoPenthouse, true); 
+                    
+                    grupoPenthouse.visible = false;
+                    scene.add(grupoPenthouse);
 
-                    const boxP = new THREE.Box3().setFromObject(modeloPenthouse);
+                    const boxP = new THREE.Box3().setFromObject(grupoPenthouse);
                     const sizeP = boxP.getSize(new THREE.Vector3());
                     techoPenthouse = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
-                    techoPenthouse.rotation.z = Math.PI / 2;
+                    techoPenthouse.rotation.x = Math.PI / 2;
                     techoPenthouse.position.set(0, sizeP.y + 0.1, 0);
                     techoPenthouse.visible = false;
                     scene.add(techoPenthouse);
@@ -132,37 +144,35 @@
                     crearPasillo();
                     controls.getObject().position.set(0, 1.6, 10); 
                 }, undefined, function (error) {
-                    document.getElementById('loading').innerText = "❌ Error al cargar floorplan.glb. Revisa la consola F12.";
-                    console.error("Error Penthouse:", error);
+                    document.getElementById('loading').innerText = "❌ Error al cargar floorplan.glb.";
                 });
                 
             }, undefined, function (error) {
                 document.getElementById('loading').innerText = "❌ Error al cargar apartamento_tipo.glb.";
-                console.error("Error Tipo:", error);
             });
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        function configurarModelo(modelo) {
-            const box = new THREE.Box3().setFromObject(modelo);
-            const size = box.getSize(new THREE.Vector3());
-            
-            if (modelo === modeloPenthouse) {
-                modelo.rotation.x = -Math.PI / 2; 
+        // Función mejorada que recibe si es el penthouse o no
+        function configurarModelo(grupo, esPenthouse) {
+            // Primero rotamos el contenedor entero si es el penthouse
+            if (esPenthouse) {
+                grupo.rotation.x = -Math.PI / 2; // Lo enderezamos
             }
-            
-            const boxRotada = new THREE.Box3().setFromObject(modelo);
-            const sizeRotada = boxRotada.getSize(new THREE.Vector3());
-            const centerRotada = boxRotada.getCenter(new THREE.Vector3());
-            const maxSize = Math.max(sizeRotada.x, sizeRotada.y, sizeRotada.z);
+
+            // Calculamos la caja del contenedor ya rotado
+            const box = new THREE.Box3().setFromObject(grupo);
+            const size = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+            const maxSize = Math.max(size.x, size.y, size.z);
             
             const scaleFactor = 10 / maxSize; 
-            modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
             
-            modelo.position.x = -centerRotada.x * scaleFactor;
-            modelo.position.y = -boxRotada.min.y * scaleFactor; 
-            modelo.position.z = -centerRotada.z * scaleFactor;
+            grupo.position.x = -center.x * scaleFactor;
+            grupo.position.y = -box.min.y * scaleFactor; 
+            grupo.position.z = -center.z * scaleFactor;
         }
 
         function crearPasillo() {
@@ -250,8 +260,8 @@
             scene.add(grupoPasillo);
         }
 
-        function aplicarFiltroColor(modelo, colorHex, intensidad) {
-            modelo.traverse((child) => {
+        function aplicarFiltroColor(grupo, colorHex, intensidad) {
+            grupo.traverse((child) => {
                 if (child.isMesh && child.material) {
                     if (!child.userData.colorOriginal) {
                         child.userData.colorOriginal = child.material.color.clone();
@@ -272,50 +282,57 @@
 
             setTimeout(() => {
                 grupoPasillo.visible = false;
-                modeloAptoTipo.visible = false;
-                modeloPenthouse.visible = false;
+                grupoAptoTipo.visible = false;
+                grupoPenthouse.visible = false;
                 techoTipo.visible = false;
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
                 if (destino === "penthouse") {
                     ubicacionActual = "penthouse";
-                    modeloPenthouse.visible = true;
+                    grupoPenthouse.visible = true;
                     techoPenthouse.visible = true;
                     cajaExterior.visible = true;
-                    controls.getObject().position.set(0, 1.6, 4); 
+                    
+                    // Posicionamos la cámara al piso
+                    controls.getObject().position.set(0, 1.6, 0); 
+                    controls.getObject().rotation.x = 0; // Cámara recta
+                    
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
                 } 
                 else if (destino === "apto2") {
                     ubicacionActual = "apto2";
-                    modeloAptoTipo.visible = true;
+                    grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
                     controls.getObject().position.set(-2, 1.6, 4); 
+                    controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0xffaa77); 
                     ambientLight.intensity = 2.0;
-                    aplicarFiltroColor(modeloAptoTipo, 0xffaa77, 0.4); 
+                    aplicarFiltroColor(grupoAptoTipo, 0xffaa77, 0.4); 
                 } 
                 else if (destino === "apto3") {
                     ubicacionActual = "apto3";
-                    modeloAptoTipo.visible = true;
+                    grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
                     controls.getObject().position.set(2, 1.6, 4); 
+                    controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0x88bbff); 
                     ambientLight.intensity = 1.5;
-                    aplicarFiltroColor(modeloAptoTipo, 0x88bbff, 0.4); 
+                    aplicarFiltroColor(grupoAptoTipo, 0x88bbff, 0.4); 
                 }
                 else if (destino === "pasillo") {
                     ubicacionActual = "pasillo";
                     grupoPasillo.visible = true;
                     controls.getObject().position.set(0, 1.6, 1.5); 
+                    controls.getObject().rotation.x = 0;
                     scene.background = new THREE.Color(0x1a1a1a);
                     scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
                     ambientLight.color.setHex(0xffeedd); 
                     ambientLight.intensity = 1.2;
-                    aplicarFiltroColor(modeloAptoTipo, 0xffffff, 0);
+                    aplicarFiltroColor(grupoAptoTipo, 0xffffff, 0);
                 }
 
                 if (destino !== "pasillo") {
