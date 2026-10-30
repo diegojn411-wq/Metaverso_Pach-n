@@ -155,11 +155,18 @@
             const scaleFactor = 10 / maxSize; 
             grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
             
-            // EL TRUCO: Forzar a que el punto más bajo del modelo quede en Y=0
-            const boxFinal = new THREE.Box3().setFromObject(grupo);
-            grupo.position.x = -center.x * scaleFactor;
-            grupo.position.y = -boxFinal.min.y; // Esto asegura que toque el piso
-            grupo.position.z = -center.z * scaleFactor;
+            if (esPenthouse) {
+                // Si es penthouse, forzamos a que el punto más bajo quede en Y=0
+                const boxFinal = new THREE.Box3().setFromObject(grupo);
+                grupo.position.x = -center.x * scaleFactor;
+                grupo.position.y = -boxFinal.min.y; 
+                grupo.position.z = -center.z * scaleFactor;
+            } else {
+                // Si es apartamento normal, usamos la lógica original
+                grupo.position.x = -center.x * scaleFactor;
+                grupo.position.y = -box.min.y * scaleFactor; 
+                grupo.position.z = -center.z * scaleFactor;
+            }
         }
 
         function crearPasillo() {
@@ -275,7 +282,6 @@
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
-                // Reseteamos la cámara a la normalidad absoluta
                 controls.getObject().rotation.set(0, 0, 0);
 
                 if (destino === "penthouse") {
@@ -283,9 +289,7 @@
                     grupoPenthouse.visible = true;
                     cajaExterior.visible = true;
                     
-                    // APARECEMOS EXACTAMENTE DENTRO DEL PISO DEL PENTHOUSE
                     controls.getObject().position.set(0, 1.6, 2); 
-                    
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
                 } 
