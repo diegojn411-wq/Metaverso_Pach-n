@@ -43,6 +43,10 @@
         let portalFondo, portalIzq, portalDer;
         let techoTipo, techoPenthouse;
 
+        // Variables para guardar las dimensiones reales de los apartamentos
+        let dimsTipo = { width: 10, depth: 10, height: 3 };
+        let dimsPenthouse = { width: 10, depth: 10, height: 3 };
+
         init();
         animate();
 
@@ -104,10 +108,9 @@
             // --- CARGAR APARTAMENTO TIPO ---
             loader.load(urlTipo, function (gltf) {
                 modeloAptoTipo = gltf.scene;
-                
                 grupoAptoTipo = new THREE.Group();
                 grupoAptoTipo.add(modeloAptoTipo);
-                configurarModelo(grupoAptoTipo, false);
+                dimsTipo = configurarModelo(grupoAptoTipo, false);
                 grupoAptoTipo.visible = false;
                 scene.add(grupoAptoTipo);
                 
@@ -122,13 +125,9 @@
                 // --- CARGAR PENTHOUSE ---
                 loader.load(urlPenthouse, function (gltfP) {
                     modeloPenthouse = gltfP.scene;
-                    
                     grupoPenthouse = new THREE.Group();
                     grupoPenthouse.add(modeloPenthouse);
-                    
-                    // Rotación en Z para que quede de pie
-                    configurarModelo(grupoPenthouse, true); 
-                    
+                    dimsPenthouse = configurarModelo(grupoPenthouse, true); 
                     grupoPenthouse.visible = false;
                     scene.add(grupoPenthouse);
 
@@ -154,10 +153,10 @@
             window.addEventListener('resize', onWindowResize);
         }
 
+        // Devuelve las dimensiones del modelo para calcular la cámara
         function configurarModelo(grupo, esPenthouse) {
             if (esPenthouse) {
-                // EJE Z CORREGIDO
-                grupo.rotation.z = -Math.PI / 2; 
+                grupo.rotation.y = Math.PI / 2; // Rotación en Y para que quede recto
             }
 
             const box = new THREE.Box3().setFromObject(grupo);
@@ -168,9 +167,16 @@
             const scaleFactor = 10 / maxSize; 
             grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
             
+            // Centrar el modelo
             grupo.position.x = -center.x * scaleFactor;
             grupo.position.y = -box.min.y * scaleFactor; 
             grupo.position.z = -center.z * scaleFactor;
+
+            return { 
+                width: size.x * scaleFactor, 
+                depth: size.z * scaleFactor, 
+                height: size.y * scaleFactor 
+            };
         }
 
         function crearPasillo() {
@@ -291,11 +297,9 @@
                     grupoPenthouse.visible = true;
                     techoPenthouse.visible = true;
                     cajaExterior.visible = true;
-                    
-                    // Cámara ajustada para ver el penthouse
-                    controls.getObject().position.set(0, 1.6, 5); 
-                    controls.getObject().rotation.x = 0; 
-                    
+                    // Cámara en el borde del penthouse
+                    controls.getObject().position.set(0, 1.6, dimsPenthouse.depth / 2 - 1); 
+                    controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
                 } 
@@ -304,8 +308,8 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
-                    // Centrado en la puerta
-                    controls.getObject().position.set(0, 1.6, 4); 
+                    // Cámara en el borde del apartamento tipo
+                    controls.getObject().position.set(0, 1.6, dimsTipo.depth / 2 - 1); 
                     controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0xffaa77); 
                     ambientLight.intensity = 2.0;
@@ -316,8 +320,8 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
-                    // Centrado en la puerta
-                    controls.getObject().position.set(0, 1.6, 4); 
+                    // Cámara en el borde del apartamento tipo
+                    controls.getObject().position.set(0, 1.6, dimsTipo.depth / 2 - 1); 
                     controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0x88bbff); 
                     ambientLight.intensity = 1.5;
@@ -386,7 +390,8 @@
                     }
                 } 
                 else if (ubicacionActual === "penthouse" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
-                    if (pos.z > 7.0) {
+                    // Para salir del apartamento, caminar hacia atrás (Z positivo)
+                    if (pos.z > dimsTipo.depth / 2 + 1) {
                         cambiarNivel("pasillo"); 
                     }
                 }
