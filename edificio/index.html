@@ -156,13 +156,13 @@
             grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
             
             if (esPenthouse) {
-                // Si es penthouse, forzamos a que el punto más bajo quede en Y=0
+                // Lógica exclusiva para el penthouse (rotado)
                 const boxFinal = new THREE.Box3().setFromObject(grupo);
                 grupo.position.x = -center.x * scaleFactor;
                 grupo.position.y = -boxFinal.min.y; 
                 grupo.position.z = -center.z * scaleFactor;
             } else {
-                // Si es apartamento normal, usamos la lógica original
+                // Lógica original para los apartamentos tipo
                 grupo.position.x = -center.x * scaleFactor;
                 grupo.position.y = -box.min.y * scaleFactor; 
                 grupo.position.z = -center.z * scaleFactor;
@@ -282,6 +282,7 @@
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
+                // Reseteamos la cámara a la normalidad
                 controls.getObject().rotation.set(0, 0, 0);
 
                 if (destino === "penthouse") {
@@ -289,7 +290,9 @@
                     grupoPenthouse.visible = true;
                     cajaExterior.visible = true;
                     
-                    controls.getObject().position.set(0, 1.6, 2); 
+                    // Para el penthouse, nos ponemos justo en el centro (o un poco hacia atrás)
+                    controls.getObject().position.set(0, 1.6, 0); 
+                    
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
                 } 
