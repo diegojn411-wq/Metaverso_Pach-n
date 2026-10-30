@@ -97,16 +97,11 @@
             scene.add(cajaExterior);
 
             const loader = new GLTFLoader();
-            
-            // --- LA SOLUCIÓN: Rutas Absolutas con la URL base ---
-            // Usamos window.location.origin para que siempre sepa dónde está parado
             const basePath = window.location.origin + window.location.pathname.replace('index.html', '');
             
+            // CAMBIO IMPORTANTE: Buscamos 'floorplant.glb' en lugar de 'penthouse.glb'
             const urlTipo = basePath + 'apartamento_tipo.glb'; 
-            const urlPenthouse = basePath + 'penthouse.glb';
-
-            console.log("Buscando Tipo en:", urlTipo);
-            console.log("Buscando Penthouse en:", urlPenthouse);
+            const urlPenthouse = basePath + 'floorplant.glb';
 
             loader.load(urlTipo, function (gltf) {
                 modeloAptoTipo = gltf.scene;
@@ -122,7 +117,6 @@
                 techoTipo.visible = false;
                 scene.add(techoTipo);
 
-                // Cargar el Penthouse
                 loader.load(urlPenthouse, function (gltfP) {
                     modeloPenthouse = gltfP.scene;
                     configurarModelo(modeloPenthouse);
@@ -141,7 +135,7 @@
                     crearPasillo();
                     controls.getObject().position.set(0, 1.6, 10); 
                 }, undefined, function (error) {
-                    document.getElementById('loading').innerText = "❌ Error al cargar penthouse.glb. Revisa la consola F12.";
+                    document.getElementById('loading').innerText = "❌ Error al cargar floorplant.glb. Revisa la consola F12.";
                     console.error("Error Penthouse:", error);
                 });
                 
@@ -153,7 +147,6 @@
             window.addEventListener('resize', onWindowResize);
         }
 
-        // ... (El resto de las funciones exactamente iguales) ...
         function configurarModelo(modelo) {
             const box = new THREE.Box3().setFromObject(modelo);
             const size = box.getSize(new THREE.Vector3());
