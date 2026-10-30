@@ -123,7 +123,7 @@
                     const boxP = new THREE.Box3().setFromObject(modeloPenthouse);
                     const sizeP = boxP.getSize(new THREE.Vector3());
                     techoPenthouse = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
-                    techoPenthouse.rotation.x = Math.PI / 2;
+                    techoPenthouse.rotation.z = Math.PI / 2;
                     techoPenthouse.position.set(0, sizeP.y + 0.1, 0);
                     techoPenthouse.visible = false;
                     scene.add(techoPenthouse);
