@@ -97,10 +97,6 @@
             scene.add(cajaExterior);
 
             const loader = new GLTFLoader();
-            
-            // --- LA SOLUCIÓN DEFINITIVA ---
-            // Forzamos la ruta absoluta de tu repositorio y le agregamos un ?v=1 
-            // para que el navegador no use la memoria y descargue el archivo fresco de internet.
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
             const urlPenthouse = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/floorplan.glb?v=1'; 
 
@@ -128,7 +124,7 @@
                     const sizeP = boxP.getSize(new THREE.Vector3());
                     techoPenthouse = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
                     techoPenthouse.rotation.x = Math.PI / 2;
-                    techoPenthouse.position.set(0, (sizeP.y * modeloPenthouse.scale.y) + 0.1, 0);
+                    techoPenthouse.position.set(0, sizeP.y + 0.1, 0);
                     techoPenthouse.visible = false;
                     scene.add(techoPenthouse);
 
@@ -151,13 +147,22 @@
         function configurarModelo(modelo) {
             const box = new THREE.Box3().setFromObject(modelo);
             const size = box.getSize(new THREE.Vector3());
-            const center = box.getCenter(new THREE.Vector3());
-            const maxSize = Math.max(size.x, size.y, size.z);
+            
+            if (modelo === modeloPenthouse) {
+                modelo.rotation.x = -Math.PI / 2; 
+            }
+            
+            const boxRotada = new THREE.Box3().setFromObject(modelo);
+            const sizeRotada = boxRotada.getSize(new THREE.Vector3());
+            const centerRotada = boxRotada.getCenter(new THREE.Vector3());
+            const maxSize = Math.max(sizeRotada.x, sizeRotada.y, sizeRotada.z);
+            
             const scaleFactor = 10 / maxSize; 
             modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
-            modelo.position.x = -center.x * scaleFactor;
-            modelo.position.y = -box.min.y * scaleFactor; 
-            modelo.position.z = -center.z * scaleFactor;
+            
+            modelo.position.x = -centerRotada.x * scaleFactor;
+            modelo.position.y = -boxRotada.min.y * scaleFactor; 
+            modelo.position.z = -centerRotada.z * scaleFactor;
         }
 
         function crearPasillo() {
