@@ -128,8 +128,8 @@
                     grupoPenthouse = new THREE.Group();
                     grupoPenthouse.add(modeloPenthouse);
                     
-                    // ROTACIÓN: Lo ponemos de pie
-                    grupoPenthouse.rotation.x = -Math.PI / 2; 
+                    // ROTACIÓN FINAL: Giro perfecto en Z
+                    grupoPenthouse.rotation.z = Math.PI / 2; 
                     
                     dimsPenthouse = configurarModelo(grupoPenthouse, true); 
                     grupoPenthouse.visible = false;
@@ -286,7 +286,7 @@
                 techoPenthouse.visible = false;
                 cajaExterior.visible = false;
 
-                // Reseteamos la cámara
+                // Reseteamos la cámara a su estado natural
                 controls.getObject().rotation.set(0, 0, 0);
 
                 if (destino === "penthouse") {
@@ -294,7 +294,7 @@
                     grupoPenthouse.visible = true;
                     techoPenthouse.visible = true;
                     cajaExterior.visible = true;
-                    // Cámara al centro del penthouse (ajustado para su nuevo tamaño)
+                    // Cámara centrada
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
