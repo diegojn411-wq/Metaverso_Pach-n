@@ -99,9 +99,9 @@
             const loader = new GLTFLoader();
             const basePath = window.location.origin + window.location.pathname.replace('index.html', '');
             
-            // --- RUTAS CORREGIDAS ---
+            // --- RUTAS ACTUALIZADAS ---
             const urlTipo = basePath + 'apartamento_tipo.glb'; 
-            const urlPenthouse = basePath + 'floorplant.glb'; // Aquí usamos el nombre nuevo
+            const urlPenthouse = basePath + 'floorplan.glb'; // Nombre corregido sin la 't'
 
             loader.load(urlTipo, function (gltf) {
                 modeloAptoTipo = gltf.scene;
@@ -135,7 +135,7 @@
                     crearPasillo();
                     controls.getObject().position.set(0, 1.6, 10); 
                 }, undefined, function (error) {
-                    document.getElementById('loading').innerText = "❌ Error al cargar floorplant.glb. Revisa que se haya subido correctamente.";
+                    document.getElementById('loading').innerText = "❌ Error al cargar floorplan.glb. Revisa la consola F12.";
                     console.error("Error Penthouse:", error);
                 });
                 
