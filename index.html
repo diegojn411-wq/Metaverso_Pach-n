@@ -2,24 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Recorrido 3D - J.Pachón</title>
+    <title>Metaverso J.Pachón - Apartamento Muestra</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; }
+        body { margin: 0; overflow: hidden; background-color: #000; }
         #info { 
-            position: absolute; top: 10px; width: 100%; text-align: center; 
-            color: white; font-family: Arial, sans-serif; font-size: 18px; 
-            pointer-events: none; z-index: 100; text-shadow: 1px 1px 2px black;
+            position: absolute; top: 20px; width: 100%; text-align: center; 
+            color: white; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; 
+            pointer-events: none; z-index: 100; text-shadow: 2px 2px 4px #000;
         }
         #loading { 
-            position: absolute; top: 50%; width: 100%; text-align: center;
+            position: absolute; top: 50%; left: 0; width: 100%; text-align: center;
             color: white; font-family: Arial, sans-serif; font-size: 30px; font-weight: bold;
-            pointer-events: none; z-index: 100; text-shadow: 1px 1px 2px black;
+            pointer-events: none; z-index: 100;
         }
     </style>
 </head>
 <body>
-    <div id="info">Haz clic para entrar al apartamento (Usa W, A, S, D para caminar y el mouse para mirar. ESC para salir)</div>
-    <div id="loading">Cargando apartamento...</div>
+    <div id="info">Haz clic para entrar al Metaverso. (Usa W, A, S, D y el mouse)</div>
+    <div id="loading">Cargando entorno...</div>
 
     <script type="importmap">
         {
@@ -35,10 +35,13 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        let camera, scene, renderer, controls, modelo;
+        let camera, scene, renderer, controls;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
+
+        // Variables de medida del apartamento
+        let aptX = 0, aptZ = -15, aptWidth = 10, aptDepth = 10, aptHeight = 3; 
 
         init();
         animate();
@@ -46,26 +49,24 @@
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87CEEB);
-            scene.fog = new THREE.Fog(0x87CEEB, 0, 30); // Niebla para que no veas el vacío fuera
+            scene.fog = new THREE.Fog(0x87CEEB, 1, 40);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            
+
             // Luces
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); 
             scene.add(ambientLight);
             const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); 
             dirLight.position.set(10, 20, 10);
             scene.add(dirLight);
 
-            // Renderizador
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // Controles en Primera Persona (Caminar)
             controls = new PointerLockControls(camera, document.body);
             
-            // Evento para hacer clic y entrar en modo caminar
             document.body.addEventListener('click', function () {
                 controls.lock();
             });
@@ -81,7 +82,7 @@
 
             scene.add(controls.getObject());
 
-            // Movimiento con teclado
+            // Teclado
             const onKeyDown = function (event) {
                 switch (event.code) {
                     case 'ArrowUp': case 'KeyW': moveForward = true; break;
@@ -103,14 +104,17 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
 
-            // Cargar el modelo
+            // CONSTRUIR EL ENTORNO
+            crearEntorno();
+
+            // CARGAR EL APARTAMENTO (con su techo)
             const loader = new GLTFLoader();
             loader.load('./apartamento.glb', function (gltf) {
                 document.getElementById('loading').style.display = 'none';
                 
-                modelo = gltf.scene;
+                const modelo = gltf.scene;
                 
-                // Ajuste de escala para que la cámara quede a la altura de los ojos
+                // Ajuste de escala para que mida 10x10 metros
                 const box = new THREE.Box3().setFromObject(modelo);
                 const size = box.getSize(new THREE.Vector3());
                 const maxSize = Math.max(size.x, size.y, size.z);
@@ -123,10 +127,9 @@
                 modelo.position.y -= center.y * scaleFactor;
                 modelo.position.z -= center.z * scaleFactor;
                 
-                // Poner el piso a la altura 0
-                modelo.position.y += (size.y * scaleFactor) / 2;
+                // Posicionar el apartamento al final del pasillo
+                modelo.position.set(aptX, 0, aptZ);
 
-                // Activar colisiones básicas con las paredes
                 modelo.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
@@ -136,15 +139,95 @@
 
                 scene.add(modelo);
 
-                // Colocar la cámara a 1.6 metros de altura (altura de los ojos) al inicio
-                controls.getObject().position.y = 1.6;
-                controls.getObject().position.z = 5; // Un poco hacia atrás para que no aparezca dentro de una pared
+                // CREAR EL TECHO DEL APARTAMENTO
+                crearTecho();
+
+                // Poner la cámara en el ascensor (Altura de los ojos)
+                controls.getObject().position.set(0, 1.6, 10); 
             }, undefined, function (error) {
                 document.getElementById('loading').innerText = "❌ Error al cargar el modelo.";
                 console.error(error);
             });
 
             window.addEventListener('resize', onWindowResize);
+        }
+
+        function crearEntorno() {
+            // Materiales
+            const matPiso = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.8 });
+            const matPared = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 });
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.5 });
+
+            // 1. EL ELEVADOR (Una caja donde empezamos)
+            const ascensorGeo = new THREE.BoxGeometry(3, 3, 3);
+            // Piso del ascensor
+            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), matMetal);
+            pisoAsc.rotation.x = -Math.PI / 2;
+            pisoAsc.position.set(0, 0.01, 10);
+            scene.add(pisoAsc);
+            // Techo del ascensor
+            const techoAsc = new THREE.Mesh(new THREE.PlaneGeometry(3, 3), matMetal);
+            techoAsc.rotation.x = Math.PI / 2;
+            techoAsc.position.set(0, 3, 10);
+            scene.add(techoAsc);
+            // Paredes del ascensor (fondo, izq, der)
+            const paredFondo = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 0.1), matMetal);
+            paredFondo.position.set(0, 1.5, 11.5);
+            scene.add(paredFondo);
+            const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 3), matMetal);
+            paredIzq.position.set(-1.5, 1.5, 10);
+            scene.add(paredIzq);
+            const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, 3), matMetal);
+            paredDer.position.set(1.5, 1.5, 10);
+            scene.add(paredDer);
+            // Puerta del ascensor (abierta)
+            const puertaIzq = new THREE.Mesh(new THREE.BoxGeometry(1.4, 3, 0.1), matPuerta);
+            puertaIzq.position.set(-1.45, 1.5, 8.45); // Deslizada a la izquierda
+            scene.add(puertaIzq);
+            const puertaDer = new THREE.Mesh(new THREE.BoxGeometry(1.4, 3, 0.1), matPuerta);
+            puertaDer.position.set(1.45, 1.5, 8.45); // Deslizada a la derecha
+            scene.add(puertaDer);
+
+            // 2. EL CORREDOR (Desde Z=8.5 hasta Z=-10)
+            const largoCorredor = 18.5;
+            const anchoCorredor = 3;
+            
+            // Piso del corredor
+            const pisoCorredor = new THREE.Mesh(new THREE.PlaneGeometry(anchoCorredor, largoCorredor), matPiso);
+            pisoCorredor.rotation.x = -Math.PI / 2;
+            pisoCorredor.position.set(0, 0, 8.5 - (largoCorredor/2));
+            scene.add(pisoCorredor);
+
+            // Techo del corredor
+            const techoCorredor = new THREE.Mesh(new THREE.PlaneGeometry(anchoCorredor, largoCorredor), matPared);
+            techoCorredor.rotation.x = Math.PI / 2;
+            techoCorredor.position.set(0, 3, 8.5 - (largoCorredor/2));
+            scene.add(techoCorredor);
+
+            // Paredes del corredor
+            const paredCorredorIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, largoCorredor), matPared);
+            paredCorredorIzq.position.set(-anchoCorredor/2, 1.5, 8.5 - (largoCorredor/2));
+            scene.add(paredCorredorIzq);
+
+            const paredCorredorDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3, largoCorredor), matPared);
+            paredCorredorDer.position.set(anchoCorredor/2, 1.5, 8.5 - (largoCorredor/2));
+            scene.add(paredCorredorDer);
+
+            // Puerta de entrada al apartamento (al final del pasillo)
+            const puertaApt = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0x8B4513 }));
+            puertaApt.position.set(0, 1.1, -9.5); // Un poco antes del apartamento
+            scene.add(puertaApt);
+        }
+
+        function crearTecho() {
+            // Creamos un techo blanco del mismo tamaño que el apartamento
+            const techoGeo = new THREE.PlaneGeometry(aptWidth, aptDepth);
+            const techoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1.0, side: THREE.DoubleSide });
+            const techo = new THREE.Mesh(techoGeo, techoMat);
+            techo.rotation.x = Math.PI / 2; // Mirando hacia abajo
+            techo.position.set(aptX, aptHeight, aptZ);
+            scene.add(techo);
         }
 
         function onWindowResize() {
@@ -157,13 +240,12 @@
             requestAnimationFrame(animate);
 
             if (controls.isLocked === true) {
-                // Fricción (frenado)
                 velocity.x -= velocity.x * 10.0 * 0.016; 
                 velocity.z -= velocity.z * 10.0 * 0.016;
 
                 direction.z = Number(moveForward) - Number(moveBackward);
                 direction.x = Number(moveRight) - Number(moveLeft);
-                direction.normalize(); // Evita que te muevas más rápido en diagonal
+                direction.normalize();
 
                 if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
                 if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
