@@ -38,7 +38,7 @@
         let transicionEnCurso = false;
         
         let modeloAptoTipo, modeloPenthouse;
-        let grupoAptoTipo, grupoPenthouse; // CONTENEDORES MÁGICOS
+        let grupoAptoTipo, grupoPenthouse; 
         let grupoPasillo, ambientLight, cajaExterior;
         let portalFondo, portalIzq, portalDer;
         let techoTipo, techoPenthouse;
@@ -126,7 +126,7 @@
                     grupoPenthouse = new THREE.Group();
                     grupoPenthouse.add(modeloPenthouse);
                     
-                    // AQUÍ APLICAMOS LA ROTACIÓN AL CONTENEDOR, NO AL MODELO
+                    // Rotación en Z para que quede de pie
                     configurarModelo(grupoPenthouse, true); 
                     
                     grupoPenthouse.visible = false;
@@ -154,14 +154,12 @@
             window.addEventListener('resize', onWindowResize);
         }
 
-        // Función mejorada que recibe si es el penthouse o no
         function configurarModelo(grupo, esPenthouse) {
-            // Primero rotamos el contenedor entero si es el penthouse
             if (esPenthouse) {
-                grupo.rotation.x = -Math.PI / 2; // Lo enderezamos
+                // EJE Z CORREGIDO
+                grupo.rotation.z = -Math.PI / 2; 
             }
 
-            // Calculamos la caja del contenedor ya rotado
             const box = new THREE.Box3().setFromObject(grupo);
             const size = box.getSize(new THREE.Vector3());
             const center = box.getCenter(new THREE.Vector3());
@@ -294,9 +292,9 @@
                     techoPenthouse.visible = true;
                     cajaExterior.visible = true;
                     
-                    // Posicionamos la cámara al piso
-                    controls.getObject().position.set(0, 1.6, 0); 
-                    controls.getObject().rotation.x = 0; // Cámara recta
+                    // Cámara ajustada para ver el penthouse
+                    controls.getObject().position.set(0, 1.6, 5); 
+                    controls.getObject().rotation.x = 0; 
                     
                     ambientLight.color.setHex(0xffffff); 
                     ambientLight.intensity = 1.5;
@@ -306,7 +304,8 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
-                    controls.getObject().position.set(-2, 1.6, 4); 
+                    // Centrado en la puerta
+                    controls.getObject().position.set(0, 1.6, 4); 
                     controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0xffaa77); 
                     ambientLight.intensity = 2.0;
@@ -317,7 +316,8 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     cajaExterior.visible = true;
-                    controls.getObject().position.set(2, 1.6, 4); 
+                    // Centrado en la puerta
+                    controls.getObject().position.set(0, 1.6, 4); 
                     controls.getObject().rotation.x = 0;
                     ambientLight.color.setHex(0x88bbff); 
                     ambientLight.intensity = 1.5;
