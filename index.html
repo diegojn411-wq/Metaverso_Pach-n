@@ -40,28 +40,29 @@
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
 
-        // Variables de configuración del entorno
-        const aptX = 0, aptZ = -20; 
+        // --- CONFIGURACIÓN DEL MUNDO ---
         const pasilloAncho = 2.5;
-        const alturaTecho = 2.8;
+        const alturaTecho = 2.8; 
+        const largoPasillo = 15; 
+        const posicionPuertaZ = -10; // Dónde termina el pasillo y empieza el apartamento
+        const posicionApartamentoZ = -20; // El centro del apartamento
 
         init();
         animate();
 
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x202020); // Fondo oscuro para dar sensación de interior
-            scene.fog = new THREE.Fog(0x202020, 1, 50);
+            // Fondo negro para que parezca que estamos dentro de un edificio
+            scene.background = new THREE.Color(0x111111); 
+            scene.fog = new THREE.Fog(0x111111, 1, 40);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
             // Luces
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.0); 
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
             scene.add(ambientLight);
-            
-            // Luz del pasillo
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2); 
-            dirLight.position.set(0, 10, -10);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.0); 
+            dirLight.position.set(0, 10, 0);
             scene.add(dirLight);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -108,7 +109,7 @@
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
 
-            // CONSTRUIR EL ENTORNO
+            // CONSTRUIR EL ENTORNO (Pasillo y Elevador)
             crearEntorno();
 
             // CARGAR EL APARTAMENTO
@@ -118,21 +119,24 @@
                 
                 const modelo = gltf.scene;
                 
-                // Ajuste de escala para que el apartamento ocupe un espacio lógico
+                // 1. Calcular el tamaño real del modelo
                 const box = new THREE.Box3().setFromObject(modelo);
                 const size = box.getSize(new THREE.Vector3());
                 const maxSize = Math.max(size.x, size.y, size.z);
-                const scaleFactor = 10 / maxSize; // Escala a 10 metros
+                
+                // 2. Escalar para que mida aprox 10 metros
+                const scaleFactor = 10 / maxSize; 
                 modelo.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-                // Centrar el modelo
+                // 3. Centrar el modelo en su propio eje (0,0,0)
                 const center = box.getCenter(new THREE.Vector3());
                 modelo.position.x -= center.x * scaleFactor;
-                modelo.position.y -= center.y * scaleFactor;
+                // Lo dejamos a nivel del suelo
+                modelo.position.y -= (box.min.y * scaleFactor); 
                 modelo.position.z -= center.z * scaleFactor;
                 
-                // Posicionar el apartamento al final del pasillo
-                modelo.position.set(aptX, 0, aptZ);
+                // 4. Mover el apartamento al final del pasillo
+                modelo.position.set(0, 0, posicionApartamentoZ);
 
                 modelo.traverse((child) => {
                     if (child.isMesh) {
@@ -143,8 +147,19 @@
 
                 scene.add(modelo);
 
-                // Poner la cámara al inicio del pasillo mirando al fondo
-                controls.getObject().position.set(0, 1.6, 10); 
+                // 5. CREAR EL TECHO DEL APARTAMENTO (Atado a las medidas del modelo)
+                // Lo hacemos un poco más grande que el modelo para que lo cubra bien
+                const techoGeo = new THREE.PlaneGeometry(size.x * scaleFactor * 1.2, size.z * scaleFactor * 1.2);
+                const techoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+                const techoApt = new THREE.Mesh(techoGeo, techoMat);
+                techoApt.rotation.x = Math.PI / 2; // Mirando hacia abajo
+                techoApt.position.set(0, alturaTecho, posicionApartamentoZ);
+                scene.add(techoApt);
+
+                // 6. PONER LA CÁMARA AL INICIO (Dentro del ascensor, mirando al pasillo)
+                // Y=1.6 metros es la altura de los ojos de una persona promedio
+                controls.getObject().position.set(0, 1.6, 8); 
+
             }, undefined, function (error) {
                 document.getElementById('loading').innerText = "❌ Error al cargar el modelo.";
                 console.error(error);
@@ -154,21 +169,19 @@
         }
 
         function crearEntorno() {
-            const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.4 }); // Piso madera
-            const matPared = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.9 }); // Pared blanca
-            const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1.0 });
-            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x4a2e15, roughness: 0.3 }); // Madera oscura
+            const matPiso = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }); // Madera
+            const matPared = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 }); // Blanco roto
+            const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x4a2e15 }); // Madera oscura
 
-            // 1. PASILLO (Desde Z=10 hasta Z=-15)
-            const largoPasillo = 25;
-            
-            // Piso
+            // --- EL PASILLO ---
+            // Piso (desde Z=10 hasta Z=-10)
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(pasilloAncho, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2;
             piso.position.set(0, 0, 10 - (largoPasillo/2));
             scene.add(piso);
 
-            // Techo
+            // Techo del pasillo
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(pasilloAncho, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2;
             techo.position.set(0, alturaTecho, 10 - (largoPasillo/2));
@@ -183,49 +196,51 @@
             paredDer.position.set(pasilloAncho/2, alturaTecho/2, 10 - (largoPasillo/2));
             scene.add(paredDer);
 
-            // 2. PUERTA DE ENTRADA (Al final del pasillo)
-            // Marco de la puerta (blanco)
-            const marco = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.1), matPared);
-            marco.position.set(0, 1.1, -14); 
-            scene.add(marco);
-            
-            // Hoja de la puerta (marrón)
-            const hojaPuerta = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.0, 0.05), matPuerta);
-            hojaPuerta.position.set(0, 1.0, -13.95); 
+            // --- LA PUERTA DEL APARTAMENTO ---
+            // Pared del fondo (con un hueco para la puerta)
+            const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((pasilloAncho-1.2)/2, alturaTecho, 0.2), matPared);
+            paredFondoIzq.position.set(-pasilloAncho/4 - 0.3, alturaTecho/2, posicionPuertaZ);
+            scene.add(paredFondoIzq);
+
+            const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((pasilloAncho-1.2)/2, alturaTecho, 0.2), matPared);
+            paredFondoDer.position.set(pasilloAncho/4 + 0.3, alturaTecho/2, posicionPuertaZ);
+            scene.add(paredFondoDer);
+
+            // Dintel (la parte de arriba de la puerta)
+            const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTecho - 2.1, 0.2), matPared);
+            dintel.position.set(0, 2.1 + (alturaTecho - 2.1)/2, posicionPuertaZ);
+            scene.add(dintel);
+
+            // La hoja de la puerta (abierta hacia adentro)
+            const hojaPuerta = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
+            hojaPuerta.position.set(-0.6, 1.05, posicionPuertaZ - 0.05); 
+            hojaPuerta.rotation.y = Math.PI / 2; // Rotada 90 grados para que parezca abierta
             scene.add(hojaPuerta);
 
-            // Pared del fondo del pasillo (alrededor de la puerta)
-            const paredFondo = new THREE.Mesh(new THREE.BoxGeometry(pasilloAncho, alturaTecho, 0.1), matPared);
-            paredFondo.position.set(0, alturaTecho/2, -14.1);
-            scene.add(paredFondo);
-
-            // 3. EL ELEVADOR (Detrás de la cámara al inicio)
-            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), new THREE.MeshStandardMaterial({ color: 0x888888 }));
+            // --- EL ELEVADOR (Detrás de ti) ---
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.8, roughness: 0.2 });
+            
+            // Piso del ascensor
+            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2;
             pisoAsc.position.set(0, 0.01, 11);
             scene.add(pisoAsc);
 
-            // Puertas del ascensor abiertas (dejando el paso libre)
-            const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
-            puertaAscIzq.position.set(-1.25, 1.1, 10.5);
+            // Puertas del ascensor abiertas
+            const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscIzq.position.set(-1.25, 1.15, 9.8);
             scene.add(puertaAscIzq);
 
-            const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.1), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 }));
-            puertaAscDer.position.set(1.25, 1.1, 10.5);
+            const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscDer.position.set(1.25, 1.15, 9.8);
             scene.add(puertaAscDer);
 
-            // Luces del techo del pasillo (pequeñas esferas emisivas)
-            for (let i = 0; i < 5; i++) {
-                const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
-                luz.position.set(0, alturaTecho - 0.1, 8 - (i * 4));
+            // Luces del techo del pasillo
+            for (let i = 0; i < 4; i++) {
+                const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffaa }));
+                luz.position.set(0, alturaTecho - 0.05, 7 - (i * 4.5));
                 scene.add(luz);
             }
-
-            // 4. CREAR EL TECHO DEL APARTAMENTO (Para que no se vea el cielo)
-            const techoApt = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), matTecho);
-            techoApt.rotation.x = Math.PI / 2;
-            techoApt.position.set(aptX, alturaTecho, aptZ);
-            scene.add(techoApt);
         }
 
         function onWindowResize() {
