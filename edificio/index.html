@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Metaverso J.Pachón - Edificio Residencial</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        #info { position: absolute; top: 20px; width: 100%; text-align: center; color: white; font-family: 'Segoe UI', Arial, sans-serif; font-size: 18px; pointer-events: none; z-index: 100; text-shadow: 2px 2px 4px #000; }
+        #loading { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 30px; font-weight: bold; pointer-events: none; z-index: 100; }
+        #fade { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: black; opacity: 0; pointer-events: none; transition: opacity 0.5s ease-in-out; z-index: 999; }
+    </style>
+</head>
+<body>
+    <div id="info">Haz clic para entrar. (Usa W, A, S, D y el mouse)</div>
+    <div id="loading">Cargando edificio...</div>
+    <div id="fade"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        let camera, scene, renderer, controls;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        const velocity = new THREE.Vector3();
+        const direction = new THREE.Vector3();
+
+        // Sistema de estados
+        let ubicacionActual = "pasillo"; 
+        let transicionEnCurso = false;
+        
+        let modeloApartamento;
+        let grupoPasillo;
+        let techoApt;
+        let cajaExterior;
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a); 
+            scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2); 
+            dirLight.position.set(0, 10, 10);
+            scene.add(dirLight);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new PointerLockControls(camera, document.body);
+            
+            document.body.addEventListener('click', function () { controls.lock(); });
+            controls.addEventListener('lock', function () { document.getElementById('info').style.display = 'none'; });
+            controls.addEventListener('unlock', function () { 
+                document.getElementById('info').style.display = 'block';
+                document.getElementById('info').innerText = "Haz clic para volver a entrar (ESC para salir)";
+            });
+            scene.add(controls.getObject());
+
+            const onKeyDown = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp': case 'KeyW': moveForward = true; break;
+                    case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
+                    case 'ArrowDown': case 'KeyS': moveBackward = true; break;
+                    case 'ArrowRight': case 'KeyD': moveRight = true; break;
+                }
+            };
+            const onKeyUp = function (event) {
+                switch (event.code) {
+                    case 'ArrowUp': case 'KeyW': moveForward = false; break;
+                    case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
+                    case 'ArrowDown': case 'KeyS': moveBackward = false; break;
+                    case 'ArrowRight': case 'KeyD': moveRight = false; break;
+                }
+            };
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+
+            const loader = new GLTFLoader();
+            loader.load('./apartamento.glb', function (gltf) {
+                document.getElementById('loading').style.display = 'none';
+                
+                modeloApartamento = gltf.scene;
+                
+                const box = new THREE.Box3().setFromObject(modeloApartamento);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+                const maxSize = Math.max(size.x, size.y, size.z);
+                const scaleFactor = 10 / maxSize;
+                
+                modeloApartamento.scale.set(scaleFactor, scaleFactor, scaleFactor);
+                modeloApartamento.position.x = -center.x * scaleFactor;
+                modeloApartamento.position.y = -box.min.y * scaleFactor;
+                modeloApartamento.position.z = -center.z * scaleFactor;
+                
+                modeloApartamento.visible = false; 
+                scene.add(modeloApartamento);
+
+                const alturaRealApt = size.y * scaleFactor + 0.1; 
+
+                techoApt = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+                techoApt.rotation.x = Math.PI / 2;
+                techoApt.position.set(0, alturaRealApt, 0);
+                techoApt.name = "techoApt";
+                techoApt.visible = false;
+                scene.add(techoApt);
+
+                cajaExterior = new THREE.Mesh(new THREE.BoxGeometry(20, 20, 20), new THREE.MeshBasicMaterial({ color: 0x87CEEB, side: THREE.BackSide }));
+                cajaExterior.position.set(0, 10, 0);
+                cajaExterior.visible = false;
+                scene.add(cajaExterior);
+
+                crearPasillo();
+                controls.getObject().position.set(0, 1.6, 10); 
+
+            }, undefined, function (error) {
+                document.getElementById('loading').innerText = "❌ Error al cargar el modelo.";
+            });
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function crearPasillo() {
+            grupoPasillo = new THREE.Group();
+            const matPiso = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 });
+            const matPared = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 });
+            const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.8, roughness: 0.2 });
+
+            // Pasillo más largo para que quepan 3 puertas
+            const largoPasillo = 20;
+            const anchoPasillo = 2.5;
+            const alturaTechoPasillo = 2.8;
+
+            const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
+            piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, largoPasillo/2); grupoPasillo.add(piso);
+
+            const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
+            techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, largoPasillo/2); grupoPasillo.add(techo);
+
+            const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
+            paredIzq.position.set(-anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2); grupoPasillo.add(paredIzq);
+
+            const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
+            paredDer.position.set(anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2); grupoPasillo.add(paredDer);
+
+            // --- APARTAMENTO 1 (Puerta al fondo) ---
+            const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
+            paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.5); grupoPasillo.add(paredFondoIzq);
+
+            const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
+            paredFondoDer.position.set(anchoPasillo/4 + 0.3, alturaTechoPasillo/2, 0.5); grupoPasillo.add(paredFondoDer);
+
+            const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTechoPasillo - 2.1, 0.2), matPared);
+            dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.5); grupoPasillo.add(dintel);
+
+            const hojaPuerta1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
+            hojaPuerta1.position.set(-0.6, 1.05, 0.45); hojaPuerta1.rotation.y = Math.PI / 2; grupoPasillo.add(hojaPuerta1);
+
+            // --- APARTAMENTO 2 (Puerta lateral derecha) ---
+            const puerta2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.1, 1.0), matPuerta);
+            puerta2.position.set(anchoPasillo/2, 1.05, 6); grupoPasillo.add(puerta2);
+
+            // --- APARTAMENTO 3 (Puerta lateral derecha) ---
+            const puerta3 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.1, 1.0), matPuerta);
+            puerta3.position.set(anchoPasillo/2, 1.05, 12); grupoPasillo.add(puerta3);
+
+            // Elevador al inicio
+            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
+            pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10.5); grupoPasillo.add(pisoAsc);
+
+            const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscIzq.position.set(-1.3, 1.15, 10.5); grupoPasillo.add(puertaAscIzq);
+
+            const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscDer.position.set(1.3, 1.15, 10.5); grupoPasillo.add(puertaAscDer);
+
+            for (let i = 0; i < 6; i++) {
+                const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
+                luz.position.set(0, alturaTechoPasillo - 0.05, 2 + (i * 3)); grupoPasillo.add(luz);
+            }
+
+            scene.add(grupoPasillo);
+        }
+
+        function cambiarNivel(destino) {
+            if (transicionEnCurso) return; 
+            transicionEnCurso = true;
+
+            const fadeDiv = document.getElementById('fade');
+            fadeDiv.style.opacity = 1; 
+
+            setTimeout(() => {
+                if (destino === "apto1") {
+                    ubicacionActual = "apto1";
+                    grupoPasillo.visible = false;
+                    modeloApartamento.visible = true;
+                    techoApt.visible = true;
+                    cajaExterior.visible = true;
+                    
+                    // Teletransporte al Apartamento 1
+                    controls.getObject().position.set(0, 1.6, 3); 
+                    scene.background = new THREE.Color(0x87CEEB); 
+                    scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
+                    
+                    // Cambiamos un poco el ambiente para que no sea idéntico
+                    ambientLight.color.setHex(0xffffff); 
+                } 
+                else if (destino === "apto2") {
+                    ubicacionActual = "apto2";
+                    grupoPasillo.visible = false;
+                    modeloApartamento.visible = true;
+                    techoApt.visible = true;
+                    cajaExterior.visible = true;
+                    
+                    // Teletransporte al Apartamento 2
+                    controls.getObject().position.set(0, 1.6, 3); 
+                    scene.background = new THREE.Color(0x87CEEB); 
+                    scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
+                    
+                    // Iluminación más cálida
+                    ambientLight.color.setHex(0xffddaa); 
+                }
+                else if (destino === "pasillo") {
+                    ubicacionActual = "pasillo";
+                    grupoPasillo.visible = true;
+                    modeloApartamento.visible = false;
+                    techoApt.visible = false;
+                    cajaExterior.visible = false; 
+                    
+                    // Volvemos frente a la puerta del apartamento del que salimos
+                    if (destino === "pasillo") controls.getObject().position.set(0, 1.6, 2); 
+                    
+                    scene.background = new THREE.Color(0x1a1a1a);
+                    scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
+                    ambientLight.color.setHex(0xffffff); 
+                }
+
+                setTimeout(() => { fadeDiv.style.opacity = 0; transicionEnCurso = false; }, 500);
+            }, 500);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (controls.isLocked === true && !transicionEnCurso) {
+                velocity.x -= velocity.x * 10.0 * 0.016; 
+                velocity.z -= velocity.z * 10.0 * 0.016;
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize();
+
+                if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
+
+                controls.moveRight(-velocity.x * 0.016);
+                controls.moveForward(-velocity.z * 0.016);
+
+                const pos = controls.getObject().position;
+
+                // DETECCIÓN DE PORTALES EN EL PASILLO
+                if (ubicacionActual === "pasillo") {
+                    // Puerta 1 (Fondo)
+                    if (pos.z < 1.0 && Math.abs(pos.x) < 0.6) {
+                        cambiarNivel("apto1"); 
+                    }
+                    // Puerta 2 (Lateral Derecha en Z=6)
+                    else if (pos.x > 1.0 && Math.abs(pos.z - 6.0) < 0.6) {
+                        cambiarNivel("apto2"); 
+                    }
+                } 
+                // DETECCIÓN DE SALIDA DEL APARTAMENTO
+                else if (ubicacionActual === "apto1" || ubicacionActual === "apto2") {
+                    if (pos.z > 5.0) {
+                        cambiarNivel("pasillo"); 
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
