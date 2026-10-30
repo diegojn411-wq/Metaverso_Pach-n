@@ -37,13 +37,8 @@
         let ubicacionActual = "pasillo"; 
         let transicionEnCurso = false;
         
-        let modeloApartamento;
-        let grupoPasillo;
-        let techoApt;
-        let cajaExterior;
-        let ambientLight;
-
-        let portalFondo, portalLateral;
+        let modeloApartamento, grupoPasillo, techoApt, cajaExterior, ambientLight;
+        let portalFondo, portalIzq, portalDer;
 
         init();
         animate();
@@ -55,9 +50,9 @@
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
+            ambientLight = new THREE.AmbientLight(0xffeedd, 1.2); 
             scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.2); 
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.0); 
             dirLight.position.set(0, 10, 10);
             scene.add(dirLight);
 
@@ -128,7 +123,7 @@
 
                 crearPasillo();
                 
-                // INICIO EN EL ASCENSOR (Z = 10)
+                // Inicio en el ascensor
                 controls.getObject().position.set(0, 1.6, 10); 
 
             }, undefined, function (error) {
@@ -140,73 +135,101 @@
 
         function crearPasillo() {
             grupoPasillo = new THREE.Group();
-            const matPiso = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 });
-            const matPared = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9 });
-            const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x4a2e15 });
-            const matMetal = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.8, roughness: 0.2 });
+            const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
+            const matPared = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 }); 
+            const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const matMarco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }); 
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x3a1e0c, roughness: 0.5 }); 
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.9, roughness: 0.1 }); 
 
-            // El pasillo va desde Z=0 hasta Z=12
-            const largoPasillo = 12;
-            const anchoPasillo = 2.5;
+            const largoPasillo = 10;
+            const anchoPasillo = 3.0; // Un poco más ancho para que no se sienta claustrofóbico
             const alturaTechoPasillo = 2.8;
 
-            // Piso de madera (desde Z=0 hasta Z=9, el ascensor está del 9 al 12)
-            const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, 9), matPiso);
-            piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 4.5); grupoPasillo.add(piso);
+            // Piso y Techo
+            const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
+            piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 5); grupoPasillo.add(piso);
 
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
-            techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, largoPasillo/2); grupoPasillo.add(techo);
+            techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
 
-            const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
-            paredIzq.position.set(-anchoPasillo/2, alturaTechoPasillo/2, largoPasillo/2); grupoPasillo.add(paredIzq);
+            // --- PARED IZQUIERDA (Con hueco para la puerta) ---
+            // Tramo 1 (Desde el elevador hasta la puerta)
+            const paredIzq1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4), matPared);
+            paredIzq1.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 8); grupoPasillo.add(paredIzq1);
+            // Tramo 2 (Desde la puerta hasta el fondo)
+            const paredIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4.5), matPared);
+            paredIzq2.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 2.25); grupoPasillo.add(paredIzq2);
 
-            // Pared derecha partida para hacer el hueco de la puerta lateral (entre Z=3 y Z=4)
-            const paredDerFondo = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 3), matPared);
-            paredDerFondo.position.set(anchoPasillo/2, alturaTechoPasillo/2, 1.5); grupoPasillo.add(paredDerFondo);
+            // --- PARED DERECHA (Con hueco para la puerta) ---
+            // Tramo 1
+            const paredDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4), matPared);
+            paredDer1.position.set(anchoPasillo/2, alturaTechoPasillo/2, 8); grupoPasillo.add(paredDer1);
+            // Tramo 2
+            const paredDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 4.5), matPared);
+            paredDer2.position.set(anchoPasillo/2, alturaTechoPasillo/2, 2.25); grupoPasillo.add(paredDer2);
 
-            const paredDerFrente = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 8), matPared);
-            paredDerFrente.position.set(anchoPasillo/2, alturaTechoPasillo/2, 8); grupoPasillo.add(paredDerFrente);
-
-            // --- PUERTA 1 (Fondo - Apartamento 1) ---
+            // --- PUERTA CENTRAL (Fondo Z=0) ---
             const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
-            paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.5); grupoPasillo.add(paredFondoIzq);
-
+            paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoIzq);
             const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
-            paredFondoDer.position.set(anchoPasillo/4 + 0.3, alturaTechoPasillo/2, 0.5); grupoPasillo.add(paredFondoDer);
-
+            paredFondoDer.position.set(anchoPasillo/4 + 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoDer);
             const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTechoPasillo - 2.1, 0.2), matPared);
-            dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.5); grupoPasillo.add(dintel);
+            dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.1); grupoPasillo.add(dintel);
 
+            // Marco y puerta central
+            const marcoFondo = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.2, 0.1), matMarco);
+            marcoFondo.position.set(0, 1.1, 0.15); grupoPasillo.add(marcoFondo);
             const hojaPuerta1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
-            hojaPuerta1.position.set(-0.6, 1.05, 0.45); hojaPuerta1.rotation.y = Math.PI / 2; grupoPasillo.add(hojaPuerta1);
+            hojaPuerta1.position.set(-0.6, 1.05, 0.2); hojaPuerta1.rotation.y = Math.PI / 2; grupoPasillo.add(hojaPuerta1);
+            
+            // Luz saliendo de la puerta central
+            const luzPuerta1 = new THREE.PointLight(0xffaa55, 2, 5);
+            luzPuerta1.position.set(0, 1.0, 0.5); grupoPasillo.add(luzPuerta1);
 
-            portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.2), new THREE.MeshBasicMaterial({ visible: false }));
-            portalFondo.position.set(0, 1.05, 0.5);
-            grupoPasillo.add(portalFondo);
+            portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
+            portalFondo.position.set(0, 1.05, 0.2); grupoPasillo.add(portalFondo);
 
-            // --- PUERTA 2 (Lateral Derecha en Z=3.5) ---
-            const puerta2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
-            puerta2.position.set(anchoPasillo/2, 1.05, 3.5); grupoPasillo.add(puerta2);
+            // --- PUERTA DERECHA (Lateral Z=5) ---
+            const marcoDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 1.3), matMarco);
+            marcoDer.position.set(anchoPasillo/2, 1.1, 5); grupoPasillo.add(marcoDer);
+            const puertaDer = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 1.0), matPuerta);
+            puertaDer.position.set(anchoPasillo/2 - 0.1, 1.05, 5); grupoPasillo.add(puertaDer);
 
-            portalLateral = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.1, 1.0), new THREE.MeshBasicMaterial({ visible: false }));
-            portalLateral.position.set(anchoPasillo/2, 1.05, 3.5);
-            grupoPasillo.add(portalLateral);
+            portalDer = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            portalDer.position.set(anchoPasillo/2, 1.05, 5); grupoPasillo.add(portalDer);
 
-            // --- ELEVADOR (Z=10.5) ---
+            // --- PUERTA IZQUIERDA (Lateral Z=5) ---
+            const marcoIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.2, 1.3), matMarco);
+            marcoIzq.position.set(-anchoPasillo/2, 1.1, 5); grupoPasillo.add(marcoIzq);
+            const puertaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.1, 1.0), matPuerta);
+            puertaIzq.position.set(-anchoPasillo/2 + 0.1, 1.05, 5); grupoPasillo.add(puertaIzq);
+
+            portalIzq = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            portalIzq.position.set(-anchoPasillo/2, 1.05, 5); grupoPasillo.add(portalIzq);
+
+            // --- ELEVADOR (Z=10) ---
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
-            pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10.5); grupoPasillo.add(pisoAsc);
+            pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10); grupoPasillo.add(pisoAsc);
 
             const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
-            puertaAscIzq.position.set(-1.3, 1.15, 10.5); grupoPasillo.add(puertaAscIzq);
+            puertaAscIzq.position.set(-1.3, 1.15, 10); grupoPasillo.add(puertaAscIzq);
 
             const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
-            puertaAscDer.position.set(1.3, 1.15, 10.5); grupoPasillo.add(puertaAscDer);
+            puertaAscDer.position.set(1.3, 1.15, 10); grupoPasillo.add(puertaAscDer);
 
-            // Luces
+            const marcoAsc = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.4, 0.1), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
+            marcoAsc.position.set(0, 1.2, 10.05); grupoPasillo.add(marcoAsc);
+            const huecoAsc = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.2, 0.2), matTecho);
+            huecoAsc.position.set(0, 1.1, 10.05); grupoPasillo.add(huecoAsc); 
+
+            // Lámparas colgantes
             for (let i = 0; i < 3; i++) {
-                const luz = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
-                luz.position.set(0, alturaTechoPasillo - 0.05, 2 + (i * 3)); grupoPasillo.add(luz);
+                const lampara = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 0.2, 16), new THREE.MeshBasicMaterial({ color: 0xffffcc }));
+                lampara.position.set(0, alturaTechoPasillo - 0.1, 3 + (i * 2.5)); grupoPasillo.add(lampara);
+                
+                const luzP = new THREE.PointLight(0xffffcc, 1, 4);
+                luzP.position.set(0, alturaTechoPasillo - 0.2, 3 + (i * 2.5)); grupoPasillo.add(luzP);
             }
 
             scene.add(grupoPasillo);
@@ -220,19 +243,29 @@
             fadeDiv.style.opacity = 1; 
 
             setTimeout(() => {
-                if (destino === "apto1" || destino === "apto2") {
+                if (destino === "apto1" || destino === "apto2" || destino === "apto3") {
                     ubicacionActual = destino;
                     grupoPasillo.visible = false;
                     modeloApartamento.visible = true;
                     techoApt.visible = true;
                     cajaExterior.visible = true;
                     
+                    // Teletransporte al interior del apartamento
                     controls.getObject().position.set(0, 1.6, 3); 
                     scene.background = new THREE.Color(0x87CEEB); 
                     scene.fog = new THREE.Fog(0x87CEEB, 1, 60);
                     
-                    if (destino === "apto2") ambientLight.color.setHex(0xffddaa); 
-                    else ambientLight.color.setHex(0xffffff); 
+                    // Diferentes colores e intensidades de luz para cada apartamento
+                    if (destino === "apto1") {
+                        ambientLight.color.setHex(0xffffff); // Luz natural
+                        ambientLight.intensity = 1.5;
+                    } else if (destino === "apto2") {
+                        ambientLight.color.setHex(0xffddaa); // Luz cálida (atardecer)
+                        ambientLight.intensity = 1.8;
+                    } else if (destino === "apto3") {
+                        ambientLight.color.setHex(0xaaddff); // Luz fría (día nublado)
+                        ambientLight.intensity = 1.2;
+                    }
                 } 
                 else if (destino === "pasillo") {
                     ubicacionActual = "pasillo";
@@ -241,11 +274,13 @@
                     techoApt.visible = false;
                     cajaExterior.visible = false; 
                     
-                    controls.getObject().position.set(0, 1.6, 2.5); 
+                    // Aparecer en el pasillo justo en la puerta central
+                    controls.getObject().position.set(0, 1.6, 1.5); 
                     
                     scene.background = new THREE.Color(0x1a1a1a);
                     scene.fog = new THREE.Fog(0x1a1a1a, 1, 50);
-                    ambientLight.color.setHex(0xffffff); 
+                    ambientLight.color.setHex(0xffeedd); 
+                    ambientLight.intensity = 1.2;
                 }
 
                 setTimeout(() => { fadeDiv.style.opacity = 0; transicionEnCurso = false; }, 500);
@@ -283,17 +318,21 @@
                         new THREE.Vector3(0.4, 1.8, 0.4)
                     );
 
-                    const boxPortalFondo = new THREE.Box3().setFromObject(portalFondo);
-                    if (jugadorBox.intersectsBox(boxPortalFondo)) {
+                    // Choque con la puerta del fondo
+                    if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalFondo))) {
                         cambiarNivel("apto1");
                     }
-
-                    const boxPortalLateral = new THREE.Box3().setFromObject(portalLateral);
-                    if (jugadorBox.intersectsBox(boxPortalLateral)) {
+                    // Choque con la puerta derecha
+                    if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalDer))) {
                         cambiarNivel("apto2");
                     }
+                    // Choque con la puerta izquierda
+                    if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalIzq))) {
+                        cambiarNivel("apto3");
+                    }
                 } 
-                else if (ubicacionActual === "apto1" || ubicacionActual === "apto2") {
+                else if (ubicacionActual === "apto1" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
+                    // Si caminas hacia atrás dentro del apartamento, vuelves al pasillo
                     if (pos.z > 5.0) {
                         cambiarNivel("pasillo"); 
                     }
