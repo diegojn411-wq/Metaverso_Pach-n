@@ -5,77 +5,49 @@
     <title>J.Pachón - Proyectos Inmobiliarios</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
-
         body { margin: 0; overflow: hidden; background-color: #0d0d0d; font-family: 'Montserrat', sans-serif; color: white; }
-
-        /* MENÚ DE INICIO */
-        #menu-inicio {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 1000; transition: opacity 0.8s ease;
-        }
+        
+        /* MENÚ */
+        #menu-inicio { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.8s ease; }
         .logo { font-size: 3rem; font-weight: 700; letter-spacing: 4px; margin-bottom: 10px; }
-        .subtitulo { font-size: 1.2rem; font-weight: 300; color: #aaaaaa; margin-bottom: 50px; letter-spacing: 2px; }
-        .contenedor-proyectos { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
-        .tarjeta-proyecto {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px; padding: 40px; width: 300px; text-align: center;
-            cursor: pointer; transition: all 0.3s ease;
-        }
-        .tarjeta-proyecto:hover {
-            background: rgba(255, 255, 255, 0.1); transform: translateY(-10px);
-            border-color: #ffffff; box-shadow: 0 10px 30px rgba(255,255,255,0.1);
-        }
-        .tarjeta-proyecto h3 { margin: 0; font-size: 1.8rem; font-weight: 500; }
-        .tarjeta-proyecto p { font-size: 1rem; color: #888; margin-top: 15px; }
+        .subtitulo { font-size: 1.2rem; font-weight: 300; color: #aaaaaa; margin-bottom: 40px; letter-spacing: 2px; }
+        .contenedor-proyectos { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
+        .tarjeta-proyecto { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 15px; padding: 30px; width: 200px; text-align: center; cursor: pointer; transition: all 0.3s ease; }
+        .tarjeta-proyecto:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-5px); border-color: #ffffff; box-shadow: 0 10px 30px rgba(255,255,255,0.1); }
+        .tarjeta-proyecto h3 { margin: 0; font-size: 1.3rem; font-weight: 500; }
+        .tarjeta-proyecto p { font-size: 0.9rem; color: #888; margin-top: 10px; }
 
         /* VISOR 3D */
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: none; }
-        #btn-volver {
-            position: absolute; top: 20px; left: 20px; z-index: 100;
-            background: rgba(0,0,0,0.8); color: white; border: 1px solid #555;
-            padding: 10px 20px; border-radius: 5px; cursor: pointer; display: none;
-            font-family: 'Montserrat', sans-serif; transition: 0.3s; text-decoration: none;
-        }
+        #btn-volver { position: absolute; top: 20px; left: 20px; z-index: 100; background: rgba(0,0,0,0.8); color: white; border: 1px solid #555; padding: 10px 20px; border-radius: 5px; cursor: pointer; display: none; font-family: 'Montserrat', sans-serif; transition: 0.3s; text-decoration: none; }
         #btn-volver:hover { background: rgba(255,255,255,0.2); }
 
-        /* ETIQUETAS FLOTANTES */
-        .etiqueta-3d {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.8);
-            color: #ffffff;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: 'Montserrat', sans-serif;
-            border-left: 4px solid #3498db;
-            pointer-events: none;
-            z-index: 10;
-            transform: translate(-50%, -50%);
-            display: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
+        /* ETIQUETAS */
+        .etiqueta-3d { position: absolute; background: rgba(0, 0, 0, 0.8); color: #ffffff; padding: 8px 15px; border-radius: 8px; font-size: 14px; font-family: 'Montserrat', sans-serif; border-left: 4px solid #3498db; pointer-events: none; z-index: 10; transform: translate(-50%, -50%); display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .etiqueta-3d span { font-size: 11px; color: #bdc3c7; display: block; margin-top: 4px; }
-
+        
         #info { position: absolute; top: 20px; width: 100%; text-align: center; color: white; pointer-events: none; z-index: 100; text-shadow: 2px 2px 4px #000; display: none; }
         #loading { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: white; font-size: 30px; font-weight: bold; pointer-events: none; z-index: 100; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- MENÚ -->
+    <!-- MENÚ CON LOS 4 PROYECTOS -->
     <div id="menu-inicio">
         <div class="logo">J.PACHÓN</div>
         <div class="subtitulo">Selecciona un proyecto para recorrer</div>
         <div class="contenedor-proyectos">
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia()">
-                <h3>Cámbulos y Gualandayes</h3>
-                <p>Apartamentos de 98 m²</p>
+                <h3>Torres del Club</h3>
+            </div>
+            <div class="tarjeta-proyecto" onclick="iniciarExperiencia()">
+                <h3>Multifamiliar Corea</h3>
+            </div>
+            <div class="tarjeta-proyecto" onclick="iniciarExperiencia()">
+                <h3>Reservas de la Merced</h3>
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia()">
                 <h3>Mirador de la Pampa</h3>
-                <p>880 apartamentos y 11 torres</p>
             </div>
         </div>
     </div>
@@ -93,12 +65,7 @@
     <div id="etiqueta-bano" class="etiqueta-3d">Baño <span>Área: 5 m²</span></div>
 
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-            }
-        }
+        { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
     </script>
 
     <script type="module">
@@ -117,12 +84,13 @@
             const container = document.getElementById('canvas-container');
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87CEEB); 
-            scene.fog = new THREE.Fog(0x87CEEB, 10, 100);
+            // Reducimos la niebla para que el techo no se vea afectado
+            scene.fog = new THREE.Fog(0x87CEEB, 20, 100); 
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.up.set(0, 1, 0);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); 
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); 
             scene.add(ambientLight);
             const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); 
             dirLight.position.set(10, 20, 10);
@@ -133,42 +101,17 @@
             container.appendChild(renderer.domElement);
 
             controls = new PointerLockControls(camera, renderer.domElement);
-            
-            document.body.addEventListener('click', function (e) { 
-                if(animacionActiva && e.target.tagName !== 'A') controls.lock(); 
-            });
-            
+            document.body.addEventListener('click', function (e) { if(animacionActiva && e.target.tagName !== 'A') controls.lock(); });
             controls.addEventListener('lock', function () { document.getElementById('info').style.display = 'none'; });
-            controls.addEventListener('unlock', function () { 
-                document.getElementById('info').style.display = 'block';
-                document.getElementById('info').innerText = "Haz clic para volver a entrar (ESC para salir)";
-            });
+            controls.addEventListener('unlock', function () { document.getElementById('info').style.display = 'block'; document.getElementById('info').innerText = "Haz clic para volver a entrar (ESC para salir)"; });
             scene.add(controls.getObject());
 
-            const onKeyDown = function (event) {
-                switch (event.code) {
-                    case 'ArrowUp': case 'KeyW': moveForward = true; break;
-                    case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
-                    case 'ArrowDown': case 'KeyS': moveBackward = true; break;
-                    case 'ArrowRight': case 'KeyD': moveRight = true; break;
-                }
-            };
-            const onKeyUp = function (event) {
-                switch (event.code) {
-                    case 'ArrowUp': case 'KeyW': moveForward = false; break;
-                    case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
-                    case 'ArrowDown': case 'KeyS': moveBackward = false; break;
-                    case 'ArrowRight': case 'KeyD': moveRight = false; break;
-                }
-            };
+            const onKeyDown = function (event) { switch (event.code) { case 'ArrowUp': case 'KeyW': moveForward = true; break; case 'ArrowLeft': case 'KeyA': moveLeft = true; break; case 'ArrowDown': case 'KeyS': moveBackward = true; break; case 'ArrowRight': case 'KeyD': moveRight = true; break; } };
+            const onKeyUp = function (event) { switch (event.code) { case 'ArrowUp': case 'KeyW': moveForward = false; break; case 'ArrowLeft': case 'KeyA': moveLeft = false; break; case 'ArrowDown': case 'KeyS': moveBackward = false; break; case 'ArrowRight': case 'KeyD': moveRight = false; break; } };
             document.addEventListener('keydown', onKeyDown);
             document.addEventListener('keyup', onKeyUp);
 
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
 
         window.iniciarExperiencia = function() {
@@ -178,15 +121,12 @@
             document.getElementById('info').style.display = 'block';
             document.getElementById('loading').style.display = 'block';
             animacionActiva = true;
-            
             if (!renderer) init3D();
             cargarApartamentoMuestra();
         }
 
         window.volverAlMenu = function() {
-            if(scene) {
-                while(scene.children.length > 0){ scene.remove(scene.children[0]); }
-            }
+            if(scene) { while(scene.children.length > 0){ scene.remove(scene.children[0]); } }
             document.getElementById('menu-inicio').style.display = 'flex';
             document.getElementById('canvas-container').style.display = 'none';
             document.getElementById('btn-volver').style.display = 'none';
@@ -200,7 +140,6 @@
 
         function cargarApartamentoMuestra() {
             const loader = new GLTFLoader();
-            // Cargamos el modelo 3D de primera persona que SÍ funciona
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
 
             loader.load(urlTipo, function (gltf) {
@@ -221,63 +160,54 @@
 
                 scene.add(grupo);
                 
-                document.getElementById('loading').style.display = 'none';
+                // --- CREAR TECHO SÓLIDO ---
+                // Calculamos la altura del modelo para poner el techo justo arriba
+                const alturaTecho = size.y * scaleFactor;
+                const techoGeo = new THREE.PlaneGeometry(12, 12); // Un poco más grande que el apto
+                const techoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 });
+                const techo = new THREE.Mesh(techoGeo, techoMat);
+                techo.rotation.x = Math.PI / 2; // Mirando hacia abajo
+                techo.position.set(0, alturaTecho, 0); // Justo encima del modelo
+                scene.add(techo);
                 
-                // Cámara en la entrada (ajusta si sales en el baño)
+                document.getElementById('loading').style.display = 'none';
                 controls.getObject().position.set(0, 1.6, 3); 
 
-                // Mostrar etiquetas HTML
+                // Mostrar etiquetas
                 document.getElementById('etiqueta-sala').style.display = 'block';
                 document.getElementById('etiqueta-cocina').style.display = 'block';
                 document.getElementById('etiqueta-habitacion1').style.display = 'block';
                 document.getElementById('etiqueta-bano').style.display = 'block';
 
-                // Posiciones de las etiquetas en el espacio 3D
+                // --- POSICIONES DE LAS ETIQUETAS EN CADA ZONA ---
+                // Ajustadas para que floten sobre cada habitación (no al fondo)
                 etiquetas = [
-                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, 0) }, 
-                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -2) },
-                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(2.5, 2.2, -3) },
-                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(-1.5, 2.2, -3) }
+                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, 0) }, // Centro/Sala
+                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -1.5) }, // Cocina a la izquierda
+                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(2.5, 2.2, -2.5) }, // Habitación a la derecha
+                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(-1.5, 2.2, -3.5) } // Baño al fondo
                 ];
             });
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            
             if (animacionActiva && controls.isLocked === true) {
-                velocity.x -= velocity.x * 10.0 * 0.016; 
-                velocity.z -= velocity.z * 10.0 * 0.016;
-                direction.z = Number(moveForward) - Number(moveBackward);
-                direction.x = Number(moveRight) - Number(moveLeft);
-                direction.normalize();
+                velocity.x -= velocity.x * 10.0 * 0.016; velocity.z -= velocity.z * 10.0 * 0.016;
+                direction.z = Number(moveForward) - Number(moveBackward); direction.x = Number(moveRight) - Number(moveLeft); direction.normalize();
                 if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
                 if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
-                controls.moveRight(-velocity.x * 0.016);
-                controls.moveForward(-velocity.z * 0.016);
+                controls.moveRight(-velocity.x * 0.016); controls.moveForward(-velocity.z * 0.016);
             }
-
             if (animacionActiva && etiquetas.length > 0) {
                 etiquetas.forEach(item => {
-                    const vector = item.posicion.clone();
-                    vector.project(camera);
-
-                    const x = (vector.x * .5 + .5) * window.innerWidth;
-                    const y = (-(vector.y * .5) + .5) * window.innerHeight;
-
-                    if (vector.z > 1) {
-                        item.element.style.opacity = 0;
-                    } else {
-                        item.element.style.opacity = 1;
-                        item.element.style.left = `${x}px`;
-                        item.element.style.top = `${y}px`;
-                    }
+                    const vector = item.posicion.clone(); vector.project(camera);
+                    const x = (vector.x * .5 + .5) * window.innerWidth; const y = (-(vector.y * .5) + .5) * window.innerHeight;
+                    if (vector.z > 1) { item.element.style.opacity = 0; } else { item.element.style.opacity = 1; item.element.style.left = `${x}px`; item.element.style.top = `${y}px`; }
                 });
             }
-
             if(renderer) renderer.render(scene, camera);
         }
-
         animate();
     </script>
 </body>
