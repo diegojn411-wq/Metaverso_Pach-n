@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>J.Pachón - Metaverso Inmobiliario</title>
+    <title>J.Pachón - Proyectos Inmobiliarios</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap');
 
         body { margin: 0; overflow: hidden; background-color: #0d0d0d; font-family: 'Montserrat', sans-serif; color: white; }
 
-        /* --- MENÚ DE INICIO --- */
+        /* MENÚ DE INICIO */
         #menu-inicio {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
@@ -30,7 +30,7 @@
         .tarjeta-proyecto h3 { margin: 0; font-size: 1.8rem; font-weight: 500; }
         .tarjeta-proyecto p { font-size: 1rem; color: #888; margin-top: 15px; }
 
-        /* --- VISOR 3D --- */
+        /* VISOR 3D */
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: none; }
         #btn-volver {
             position: absolute; top: 20px; left: 20px; z-index: 100;
@@ -40,23 +40,23 @@
         }
         #btn-volver:hover { background: rgba(255,255,255,0.2); }
 
-        /* ETIQUETAS FLOTANTES (HUD) */
+        /* ETIQUETAS FLOTANTES */
         .etiqueta-3d {
             position: absolute;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             color: #ffffff;
-            padding: 8px 12px;
-            border-radius: 6px;
+            padding: 8px 15px;
+            border-radius: 8px;
             font-size: 14px;
             font-family: 'Montserrat', sans-serif;
-            border-left: 4px solid #3498db; /* Color azul de J.Pachón */
+            border-left: 4px solid #3498db;
             pointer-events: none;
             z-index: 10;
             transform: translate(-50%, -50%);
-            display: none; /* Se muestran al entrar */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        .etiqueta-3d span { font-size: 11px; color: #bdc3c7; display: block; margin-top: 3px; }
+        .etiqueta-3d span { font-size: 11px; color: #bdc3c7; display: block; margin-top: 4px; }
 
         #info { position: absolute; top: 20px; width: 100%; text-align: center; color: white; pointer-events: none; z-index: 100; text-shadow: 2px 2px 4px #000; display: none; }
         #loading { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: white; font-size: 30px; font-weight: bold; pointer-events: none; z-index: 100; display: none; }
@@ -69,11 +69,11 @@
         <div class="logo">J.PACHÓN</div>
         <div class="subtitulo">Selecciona un proyecto para recorrer</div>
         <div class="contenedor-proyectos">
-            <div class="tarjeta-proyecto" onclick="iniciarExperiencia('Cámbulos y Gualandayes')">
+            <div class="tarjeta-proyecto" onclick="iniciarExperiencia()">
                 <h3>Cámbulos y Gualandayes</h3>
                 <p>Apartamentos de 98 m²</p>
             </div>
-            <div class="tarjeta-proyecto" onclick="iniciarExperiencia('Mirador de la Pampa')">
+            <div class="tarjeta-proyecto" onclick="iniciarExperiencia()">
                 <h3>Mirador de la Pampa</h3>
                 <p>880 apartamentos y 11 torres</p>
             </div>
@@ -86,7 +86,7 @@
     <div id="info">Haz clic para entrar. (Usa W, A, S, D y el mouse)</div>
     <div id="loading">Cargando Experiencia...</div>
 
-    <!-- ETIQUETAS DE DEPENDENCIAS (Se posicionarán con código) -->
+    <!-- ETIQUETAS -->
     <div id="etiqueta-sala" class="etiqueta-3d">Sala / Comedor <span>Área: 24 m²</span></div>
     <div id="etiqueta-cocina" class="etiqueta-3d">Cocina <span>Área: 12 m²</span></div>
     <div id="etiqueta-habitacion1" class="etiqueta-3d">Habitación Principal <span>Área: 15 m²</span></div>
@@ -106,23 +106,17 @@
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-        // --- VARIABLES GLOBALES ---
         let camera, scene, renderer, controls;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         const velocity = new THREE.Vector3();
         const direction = new THREE.Vector3();
-        let ubicacionActual = "apartamento"; // Iniciamos directamente en el apartamento
         let animacionActiva = false;
-        let modeloAptoTipo, grupoAptoTipo;
-
-        // Etiquetas
         let etiquetas = [];
 
-        // --- INICIALIZACIÓN 3D ---
         function init3D() {
             const container = document.getElementById('canvas-container');
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87CEEB); // Fondo cielo
+            scene.background = new THREE.Color(0x87CEEB); 
             scene.fog = new THREE.Fog(0x87CEEB, 10, 100);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -177,8 +171,7 @@
             });
         }
 
-        // --- LÓGICA DE LA INTERFAZ ---
-        window.iniciarExperiencia = function(nombreProyecto) {
+        window.iniciarExperiencia = function() {
             document.getElementById('menu-inicio').style.display = 'none';
             document.getElementById('canvas-container').style.display = 'block';
             document.getElementById('btn-volver').style.display = 'block';
@@ -205,34 +198,32 @@
             renderer = null;
         }
 
-        // --- CARGAR EL APARTAMENTO (Solo mostramos el apto, no el pasillo) ---
         function cargarApartamentoMuestra() {
             const loader = new GLTFLoader();
-            // Usamos el modelo base (el de los apartamentos tipo)
+            // Cargamos el modelo 3D de primera persona que SÍ funciona
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
 
             loader.load(urlTipo, function (gltf) {
-                modeloAptoTipo = gltf.scene;
-                grupoAptoTipo = new THREE.Group();
-                grupoAptoTipo.add(modeloAptoTipo);
+                const modelo = gltf.scene;
+                const grupo = new THREE.Group();
+                grupo.add(modelo);
                 
-                // Centrar el modelo
-                const box = new THREE.Box3().setFromObject(grupoAptoTipo);
+                const box = new THREE.Box3().setFromObject(grupo);
                 const size = box.getSize(new THREE.Vector3());
                 const center = box.getCenter(new THREE.Vector3());
                 const maxSize = Math.max(size.x, size.y, size.z);
                 const scaleFactor = 10 / maxSize; 
                 
-                grupoAptoTipo.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                grupoAptoTipo.position.x = -center.x * scaleFactor;
-                grupoAptoTipo.position.y = -box.min.y * scaleFactor; 
-                grupoAptoTipo.position.z = -center.z * scaleFactor;
+                grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
+                grupo.position.x = -center.x * scaleFactor;
+                grupo.position.y = -box.min.y * scaleFactor; 
+                grupo.position.z = -center.z * scaleFactor;
 
-                scene.add(grupoAptoTipo);
+                scene.add(grupo);
                 
                 document.getElementById('loading').style.display = 'none';
                 
-                // Posicionar al cliente en la entrada (mirando hacia la sala)
+                // Cámara en la entrada (ajusta si sales en el baño)
                 controls.getObject().position.set(0, 1.6, 3); 
 
                 // Mostrar etiquetas HTML
@@ -241,17 +232,16 @@
                 document.getElementById('etiqueta-habitacion1').style.display = 'block';
                 document.getElementById('etiqueta-bano').style.display = 'block';
 
-                // Guardar referencias a las etiquetas y sus posiciones en el mundo 3D
+                // Posiciones de las etiquetas en el espacio 3D
                 etiquetas = [
-                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.5, 0) },
-                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-3, 2.5, -3) },
-                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(3, 2.5, -4) },
-                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(-2, 2.5, -4) }
+                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, 0) }, 
+                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -2) },
+                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(2.5, 2.2, -3) },
+                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(-1.5, 2.2, -3) }
                 ];
             });
         }
 
-        // --- ANIMACIÓN Y ACTUALIZACIÓN DE ETIQUETAS ---
         function animate() {
             requestAnimationFrame(animate);
             
@@ -267,17 +257,14 @@
                 controls.moveForward(-velocity.z * 0.016);
             }
 
-            // Lógica para que las etiquetas sigan la cámara
             if (animacionActiva && etiquetas.length > 0) {
                 etiquetas.forEach(item => {
-                    // Proyectar la posición 3D a coordenadas 2D de la pantalla
                     const vector = item.posicion.clone();
                     vector.project(camera);
 
                     const x = (vector.x * .5 + .5) * window.innerWidth;
                     const y = (-(vector.y * .5) + .5) * window.innerHeight;
 
-                    // Ocultar si está detrás de la cámara
                     if (vector.z > 1) {
                         item.element.style.opacity = 0;
                     } else {
