@@ -37,22 +37,20 @@
         <div class="logo">J.PACHÓN</div>
         <div class="subtitulo">Selecciona un proyecto</div>
         <div class="contenedor-proyectos">
-            <!-- Botón 1: Lleva al edificio completo -->
+            <!-- Torres del Club: Edificio completo -->
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio')">
                 <h3>Torres del Club</h3>
                 <p>Recorrido completo del edificio</p>
             </div>
-            <!-- Botón 2: Lleva directo al apartamento -->
+            <!-- Los otros 3: Directo al apartamento -->
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Multifamiliar Corea</h3>
                 <p>Visita al apartamento tipo</p>
             </div>
-            <!-- Botón 3: Lleva directo al apartamento -->
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Reservas de la Merced</h3>
                 <p>Visita al apartamento tipo</p>
             </div>
-            <!-- Botón 4: Lleva directo al apartamento -->
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Mirador de la Pampa</h3>
                 <p>Visita al apartamento tipo</p>
@@ -70,6 +68,7 @@
     <div id="etiqueta-sala" class="etiqueta-3d">Sala / Comedor <span>Área: 24 m²</span></div>
     <div id="etiqueta-cocina" class="etiqueta-3d">Cocina <span>Área: 12 m²</span></div>
     <div id="etiqueta-habitacion1" class="etiqueta-3d">Habitación Principal <span>Área: 15 m²</span></div>
+    <div id="etiqueta-habitacion2" class="etiqueta-3d">Habitación Secundaria <span>Área: 12 m²</span></div>
     <div id="etiqueta-bano" class="etiqueta-3d">Baño <span>Área: 5 m²</span></div>
 
     <script type="importmap">
@@ -87,11 +86,10 @@
         const direction = new THREE.Vector3();
         
         let animacionActiva = false;
-        let modoExperiencia = "apartamento"; // 'apartamento' o 'edificio'
+        let modoExperiencia = "apartamento"; 
         let transicionEnCurso = false;
         let etiquetas = [];
 
-        // Variables para el edificio
         let ubicacionActual = "pasillo";
         let modeloAptoTipo, grupoAptoTipo, grupoPasillo;
         let portalFondo, portalIzq, portalDer;
@@ -138,10 +136,11 @@
             
             if (!renderer) init3D();
             
+            // AQUÍ ESTÁ LA CORRECCIÓN CLAVE
             if (modoExperiencia === 'edificio') {
-                cargarEdificio();
+                cargarEdificio(); // Te lleva al pasillo
             } else {
-                cargarApartamento();
+                cargarApartamento(); // Te lleva directo al apto
             }
         }
 
@@ -158,7 +157,7 @@
             renderer = null;
         }
 
-        // --- EXPERIENCIA 1: CARGA EL APARTAMENTO DIRECTO ---
+        // --- EXPERIENCIA 1: CARGA DIRECTA AL APARTAMENTO (Multifamiliar, Reservas, Mirador) ---
         function cargarApartamento() {
             const loader = new GLTFLoader();
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
@@ -193,7 +192,7 @@
             });
         }
 
-        // --- EXPERIENCIA 2: CARGA EL EDIFICIO (PASILLO + PORTALES) ---
+        // --- EXPERIENCIA 2: CARGA EL EDIFICIO CON EL PASILLO Y PORTALES (Torres del Club) ---
         function cargarEdificio() {
             const loader = new GLTFLoader();
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
@@ -203,7 +202,7 @@
                 grupoAptoTipo = new THREE.Group();
                 grupoAptoTipo.add(modeloAptoTipo);
                 configurarModelo(grupoAptoTipo);
-                grupoAptoTipo.visible = false;
+                grupoAptoTipo.visible = false; // Oculto hasta que cruces la puerta
                 scene.add(grupoAptoTipo);
 
                 const box = new THREE.Box3().setFromObject(grupoAptoTipo);
@@ -216,11 +215,13 @@
                 techoTipo.visible = false;
                 scene.add(techoTipo);
 
-                crearPasillo();
+                crearPasillo(); // Construye el pasillo con las puertas
                 document.getElementById('loading').style.display = 'none';
+                
+                // Cámara en el ascensor
                 controls.getObject().position.set(0, 1.6, 10); 
                 ubicacionActual = "pasillo";
-                mostrarEtiquetas(false);
+                mostrarEtiquetas(false); // Sin etiquetas en el pasillo
             });
         }
 
@@ -319,10 +320,11 @@
             
             if(mostrar) {
                 etiquetas = [
-                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, 0) }, 
-                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -1.5) },
-                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(2.5, 2.2, -2.5) },
-                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(-1.5, 2.2, -3.5) }
+                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, 1.5) },
+                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) },
+                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.0) },
+                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                    { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) }
                 ];
             } else {
                 etiquetas = [];
@@ -332,6 +334,8 @@
         function cambiarNivel(destino) {
             if (transicionEnCurso) return; 
             transicionEnCurso = true;
+            
+            // Ocultar todo
             grupoPasillo.visible = false;
             grupoAptoTipo.visible = false;
             techoTipo.visible = false;
@@ -363,7 +367,7 @@
                 if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
                 controls.moveRight(-velocity.x * 0.016); controls.moveForward(-velocity.z * 0.016);
 
-                // Lógica de portales SOLO si estamos en modo edificio
+                // Lógica de portales solo si estamos en modo "edificio"
                 if (modoExperiencia === 'edificio') {
                     const pos = controls.getObject().position;
                     if (ubicacionActual === "pasillo") {
