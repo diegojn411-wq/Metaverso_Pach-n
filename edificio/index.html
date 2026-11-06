@@ -15,16 +15,27 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 1000; transition: opacity 0.8s ease;
         }
+        /* Capa oscura para resaltar el logo y las tarjetas */
         #menu-inicio::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 15, 30, 0.85); z-index: -1;
+            background: rgba(10, 20, 15, 0.85); z-index: -1; 
         }
 
-        .logo { font-size: 4rem; font-weight: 700; letter-spacing: 8px; margin-bottom: 5px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .subtitulo { font-size: 1.2rem; font-weight: 300; color: #d4af37; margin-bottom: 50px; letter-spacing: 3px; text-transform: uppercase; }
+        /* LOGO */
+        .logo-img {
+            width: 300px; /* Ajusta este tamaño según se vea mejor */
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+            background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco para que resalte el logo */
+            padding: 15px 30px;
+            border-radius: 10px;
+        }
+
+        .subtitulo { font-size: 1.2rem; font-weight: 300; color: #a3e4d7; margin-bottom: 50px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         .contenedor-proyectos { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; max-width: 1200px; }
         
+        /* Tarjetas estilo cristal con acento verde corporativo */
         .tarjeta-proyecto {
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -34,11 +45,12 @@
         }
         .tarjeta-proyecto::after {
             content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
-            background: #d4af37; transform: scaleX(0); transition: transform 0.4s ease; transform-origin: left;
+            background: #198754; /* Verde corporativo */
+            transform: scaleX(0); transition: transform 0.4s ease; transform-origin: left;
         }
         .tarjeta-proyecto:hover {
             background: rgba(255, 255, 255, 0.1); transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5); border-color: #198754;
         }
         .tarjeta-proyecto:hover::after { transform: scaleX(1); }
         .tarjeta-proyecto h3 { margin: 0; font-size: 1.3rem; font-weight: 600; color: #ffffff; }
@@ -54,30 +66,33 @@
             font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 14px;
             transition: 0.3s; text-decoration: none; backdrop-filter: blur(5px);
         }
-        #btn-volver:hover { background: rgba(212, 175, 55, 0.8); border-color: #d4af37; color: #000; }
+        #btn-volver:hover { background: #198754; border-color: #198754; color: #fff; }
 
         /* ETIQUETAS 3D */
         .etiqueta-3d {
-            position: absolute; background: rgba(15, 23, 42, 0.9); color: #ffffff;
+            position: absolute; background: rgba(15, 25, 20, 0.9); color: #ffffff;
             padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 500;
-            border-left: 4px solid #d4af37; pointer-events: none; z-index: 10;
+            border-left: 4px solid #198754; pointer-events: none; z-index: 10;
             transform: translate(-50%, -50%); display: none;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             backdrop-filter: blur(4px); white-space: nowrap;
-            transition: transform 0.1s ease-out; /* Suaviza el cambio de tamaño */
+            transition: transform 0.1s ease-out;
         }
         .etiqueta-3d span { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; font-weight: 300; }
         
         #info { position: absolute; top: 30px; width: 100%; text-align: center; color: white; pointer-events: none; z-index: 100; font-size: 16px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.8); display: none; }
-        #loading { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: #d4af37; font-size: 24px; font-weight: 600; letter-spacing: 2px; pointer-events: none; z-index: 100; display: none; }
+        #loading { position: absolute; top: 50%; left: 0; width: 100%; text-align: center; color: #198754; font-size: 24px; font-weight: 600; letter-spacing: 2px; pointer-events: none; z-index: 100; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- MENÚ PREMIUM -->
+    <!-- MENÚ PREMIUM CON LOGO -->
     <div id="menu-inicio">
-        <div class="logo">J.PACHÓN</div>
-        <div class="subtitulo">Constructora</div>
+        <!-- Asegúrate de haber subido 'logo.png' a la misma carpeta en GitHub -->
+        <img src="logo.png" alt="J.Pachón Constructora" class="logo-img">
+        
+        <div class="subtitulo">Experiencias Inmobiliarias</div>
+        
         <div class="contenedor-proyectos">
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio')">
                 <h3>Torres del Club</h3>
@@ -226,18 +241,11 @@
                 document.getElementById('loading').style.display = 'none';
                 controls.getObject().position.set(0, 1.6, 3); 
 
-                // --- ANCLAJE DE ETIQUETAS A LOS MUEBLES ---
-                // Ajustamos las coordenadas para que queden sobre el televisor, sofá, estufa, etc.
                 etiquetas = [
-                    // Sala (Sobre el televisor/centro)
                     { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
-                    // Cocina (Sobre la estufa/nevera, a la izquierda)
                     { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
-                    // Habitación Principal (Fondo izquierda, sobre la cama)
                     { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
-                    // Habitación Secundaria (Fondo derecha, sobre la cama)
                     { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
-                    // Baño (A la derecha, cerca de la entrada)
                     { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
                 ];
 
@@ -376,11 +384,7 @@
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffffff);
-                    document.getElementById('etiqueta-sala').style.display = 'block';
-                    document.getElementById('etiqueta-cocina').style.display = 'block';
-                    document.getElementById('etiqueta-habitacion1').style.display = 'block';
-                    document.getElementById('etiqueta-habitacion2').style.display = 'block';
-                    document.getElementById('etiqueta-bano').style.display = 'block';
+                    etiquetas.forEach(item => item.element.style.display = 'block');
                 } 
                 else if (destino === "apto2") {
                     ubicacionActual = "apto2";
@@ -388,11 +392,7 @@
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffaa77);
-                    document.getElementById('etiqueta-sala').style.display = 'block';
-                    document.getElementById('etiqueta-cocina').style.display = 'block';
-                    document.getElementById('etiqueta-habitacion1').style.display = 'block';
-                    document.getElementById('etiqueta-habitacion2').style.display = 'block';
-                    document.getElementById('etiqueta-bano').style.display = 'block';
+                    etiquetas.forEach(item => item.element.style.display = 'block');
                 } 
                 else if (destino === "apto3") {
                     ubicacionActual = "apto3";
@@ -400,11 +400,7 @@
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0x88bbff);
-                    document.getElementById('etiqueta-sala').style.display = 'block';
-                    document.getElementById('etiqueta-cocina').style.display = 'block';
-                    document.getElementById('etiqueta-habitacion1').style.display = 'block';
-                    document.getElementById('etiqueta-habitacion2').style.display = 'block';
-                    document.getElementById('etiqueta-bano').style.display = 'block';
+                    etiquetas.forEach(item => item.element.style.display = 'block');
                 } 
                 else if (destino === "pasillo") {
                     ubicacionActual = "pasillo";
@@ -438,7 +434,6 @@
                 }
             }
 
-            // Lógica de proyección de etiquetas 3D con efecto de escala por distancia
             if (animacionActiva && etiquetas.length > 0) {
                 etiquetas.forEach(item => {
                     const vector = item.posicion.clone(); 
@@ -453,10 +448,8 @@
                         item.element.style.opacity = 1; 
                         item.element.style.left = `${x}px`; 
                         item.element.style.top = `${y}px`; 
-
-                        // Efecto de escala: Si la cámara está lejos, la etiqueta se ve más pequeña
                         const distancia = camera.position.distanceTo(item.posicion);
-                        const escala = Math.max(0.5, Math.min(1.5, 5 / distancia)); // Ajusta estos valores si quieres que se vean más o menos grandes
+                        const escala = Math.max(0.5, Math.min(1.5, 5 / distancia)); 
                         item.element.style.transform = `translate(-50%, -50%) scale(${escala})`;
                     }
                 });
