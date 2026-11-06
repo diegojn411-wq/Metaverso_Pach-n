@@ -169,7 +169,6 @@
             renderer = null;
         }
 
-        // --- CARGA DIRECTA AL APARTAMENTO ---
         function cargarApartamento() {
             const loader = new GLTFLoader();
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
@@ -210,7 +209,6 @@
             });
         }
 
-        // --- CARGA EL EDIFICIO (PASILLO + PORTALES) ---
         function cargarEdificio() {
             const loader = new GLTFLoader();
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
@@ -416,20 +414,29 @@
                 }
             }
 
+            // --- CORRECCIÓN DE LAS ETIQUETAS 3D ---
             if (animacionActiva && etiquetas.length > 0) {
                 etiquetas.forEach(item => {
+                    // Copiamos la posición real del 3D
                     const vector = item.posicion.clone(); 
+                    
+                    // Proyectamos esa posición 3D a coordenadas 2D de la pantalla
                     vector.project(camera);
 
+                    // Convertimos a píxeles de la ventana
                     const x = (vector.x * .5 + .5) * window.innerWidth; 
                     const y = (-(vector.y * .5) + .5) * window.innerHeight;
                     
+                    // Si la etiqueta está detrás de la cámara, se oculta
                     if (vector.z > 1) { 
                         item.element.style.opacity = 0; 
                     } else { 
                         item.element.style.opacity = 1; 
+                        // Aquí se posiciona el cartel en su lugar exacto del mundo 3D
                         item.element.style.left = `${x}px`; 
                         item.element.style.top = `${y}px`; 
+                        
+                        // Efecto de escala: Si te alejas, se hace más pequeño
                         const distancia = camera.position.distanceTo(item.posicion);
                         const escala = Math.max(0.5, Math.min(1.5, 5 / distancia)); 
                         item.element.style.transform = `translate(-50%, -50%) scale(${escala})`;
