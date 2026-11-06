@@ -55,7 +55,7 @@
         <div class="contenedor-proyectos">
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio')">
                 <h3>Torres del Club</h3>
-                <div class="especificacion">Área: 120 m²<br>3 Habitaciones<br>2 Baños</div>
+                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>2 Baños</div>
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Multifamiliar Corea</h3>
@@ -67,7 +67,7 @@
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Mirador de la Pampa</h3>
-                <div class="especificacion">Área: 98 m²<br>3 Habitaciones<br>2 Baños</div>
+                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>2 Baños</div>
             </div>
         </div>
     </div>
@@ -90,7 +90,6 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
         let camera, scene, renderer, controls;
@@ -105,9 +104,9 @@
         let ambientLight;
 
         let ubicacionActual = "pasillo";
-        let modeloAptoTipo, modeloApto3Hab, grupoAptoTipo, grupoApto3Hab, grupoPasillo;
+        let modeloAptoTipo, grupoAptoTipo, grupoPasillo;
         let portalFondo, portalIzq, portalDer;
-        let techoTipo, techo3Hab;
+        let techoTipo;
 
         function init3D() {
             const container = document.getElementById('canvas-container');
@@ -170,68 +169,9 @@
             renderer = null;
         }
 
-        function cargarEdificio() {
-            const dracoLoader = new DRACOLoader();
-            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-            
-            const loader = new GLTFLoader();
-            loader.setDRACOLoader(dracoLoader);
-
-            // AQUÍ ESTÁ EL NUEVO NOMBRE DEL ARCHIVO COMPRIMIDO
-            const url3Hab = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_3hab-compressed.glb?v=1'; 
-            const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
-
-            loader.load(url3Hab, function (gltf3) {
-                modeloApto3Hab = gltf3.scene;
-                grupoApto3Hab = new THREE.Group();
-                grupoApto3Hab.add(modeloApto3Hab);
-                
-                grupoApto3Hab.rotation.z = -Math.PI / 2; 
-                
-                configurarModelo(grupoApto3Hab);
-                grupoApto3Hab.visible = false;
-                scene.add(grupoApto3Hab);
-
-                const box3 = new THREE.Box3().setFromObject(grupoApto3Hab);
-                const size3 = box3.getSize(new THREE.Vector3());
-                techo3Hab = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 }));
-                techo3Hab.rotation.x = Math.PI / 2;
-                techo3Hab.position.set(0, size3.y, 0);
-                techo3Hab.visible = false;
-                scene.add(techo3Hab);
-
-                loader.load(urlTipo, function (gltfT) {
-                    modeloAptoTipo = gltfT.scene;
-                    grupoAptoTipo = new THREE.Group();
-                    grupoAptoTipo.add(modeloAptoTipo);
-                    configurarModelo(grupoAptoTipo);
-                    grupoAptoTipo.visible = false;
-                    scene.add(grupoAptoTipo);
-
-                    const boxT = new THREE.Box3().setFromObject(grupoAptoTipo);
-                    const sizeT = boxT.getSize(new THREE.Vector3());
-                    techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 }));
-                    techoTipo.rotation.x = Math.PI / 2;
-                    techoTipo.position.set(0, sizeT.y, 0);
-                    techoTipo.visible = false;
-                    scene.add(techoTipo);
-
-                    crearPasillo();
-                    document.getElementById('loading').style.display = 'none';
-                    controls.getObject().position.set(0, 1.6, 10); 
-                    ubicacionActual = "pasillo";
-                    document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
-                });
-            });
-        }
-
+        // --- CARGA DIRECTA AL APARTAMENTO ---
         function cargarApartamento() {
-            const dracoLoader = new DRACOLoader();
-            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-            
             const loader = new GLTFLoader();
-            loader.setDRACOLoader(dracoLoader);
-
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
 
             loader.load(urlTipo, function (gltf) {
@@ -270,6 +210,38 @@
             });
         }
 
+        // --- CARGA EL EDIFICIO (PASILLO + PORTALES) ---
+        function cargarEdificio() {
+            const loader = new GLTFLoader();
+            const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
+
+            loader.load(urlTipo, function (gltf) {
+                modeloAptoTipo = gltf.scene;
+                grupoAptoTipo = new THREE.Group();
+                grupoAptoTipo.add(modeloAptoTipo);
+                configurarModelo(grupoAptoTipo);
+                grupoAptoTipo.visible = false; 
+                scene.add(grupoAptoTipo);
+
+                const box = new THREE.Box3().setFromObject(grupoAptoTipo);
+                const size = box.getSize(new THREE.Vector3());
+                
+                const techoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 });
+                techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), techoMat);
+                techoTipo.rotation.x = Math.PI / 2;
+                techoTipo.position.set(0, size.y, 0);
+                techoTipo.visible = false;
+                scene.add(techoTipo);
+
+                crearPasillo();
+                document.getElementById('loading').style.display = 'none';
+                
+                controls.getObject().position.set(0, 1.6, 10); 
+                ubicacionActual = "pasillo";
+                document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
+            });
+        }
+
         function configurarModelo(grupo) {
             const box = new THREE.Box3().setFromObject(grupo);
             const size = box.getSize(new THREE.Vector3());
@@ -277,10 +249,8 @@
             const maxSize = Math.max(size.x, size.y, size.z);
             const scaleFactor = 10 / maxSize; 
             grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
-            
-            const boxFinal = new THREE.Box3().setFromObject(grupo);
             grupo.position.x = -center.x * scaleFactor;
-            grupo.position.y = -boxFinal.min.y; 
+            grupo.position.y = -box.min.y * scaleFactor; 
             grupo.position.z = -center.z * scaleFactor;
         }
 
@@ -362,16 +332,14 @@
             
             grupoPasillo.visible = false;
             grupoAptoTipo.visible = false;
-            grupoApto3Hab.visible = false;
             techoTipo.visible = false;
-            techo3Hab.visible = false;
             document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
 
             setTimeout(() => {
                 if (destino === "fondo") {
                     ubicacionActual = "fondo";
-                    grupoApto3Hab.visible = true;
-                    techo3Hab.visible = true;
+                    grupoAptoTipo.visible = true;
+                    techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffffff);
                     
