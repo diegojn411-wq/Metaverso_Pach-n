@@ -15,7 +15,6 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 1000; transition: opacity 0.8s ease;
         }
-        /* Capa oscura para que el texto resalte sobre la foto */
         #menu-inicio::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10, 15, 30, 0.85); z-index: -1;
@@ -26,7 +25,6 @@
 
         .contenedor-proyectos { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; max-width: 1200px; }
         
-        /* Tarjetas estilo cristal (Glassmorphism) */
         .tarjeta-proyecto {
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -49,7 +47,6 @@
         /* --- VISOR 3D --- */
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: none; }
         
-        /* Botón Volver Premium */
         #btn-volver {
             position: absolute; top: 30px; left: 30px; z-index: 100;
             background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3);
@@ -59,7 +56,7 @@
         }
         #btn-volver:hover { background: rgba(212, 175, 55, 0.8); border-color: #d4af37; color: #000; }
 
-        /* ETIQUETAS 3D (Ancladas al mundo, no a la cámara) */
+        /* ETIQUETAS 3D */
         .etiqueta-3d {
             position: absolute; background: rgba(15, 23, 42, 0.9); color: #ffffff;
             padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 500;
@@ -67,6 +64,7 @@
             transform: translate(-50%, -50%); display: none;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             backdrop-filter: blur(4px); white-space: nowrap;
+            transition: transform 0.1s ease-out; /* Suaviza el cambio de tamaño */
         }
         .etiqueta-3d span { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; font-weight: 300; }
         
@@ -106,7 +104,7 @@
     <div id="info">Haz clic para entrar. (Usa W, A, S, D y el mouse)</div>
     <div id="loading">CARGANDO...</div>
 
-    <!-- ETIQUETAS (UI) -->
+    <!-- ETIQUETAS -->
     <div id="etiqueta-sala" class="etiqueta-3d">Sala / Comedor <span>Área: 24 m²</span></div>
     <div id="etiqueta-cocina" class="etiqueta-3d">Cocina <span>Área: 12 m²</span></div>
     <div id="etiqueta-habitacion1" class="etiqueta-3d">Habitación Principal <span>Área: 15 m²</span></div>
@@ -228,7 +226,22 @@
                 document.getElementById('loading').style.display = 'none';
                 controls.getObject().position.set(0, 1.6, 3); 
 
-                mostrarEtiquetas(true);
+                // --- ANCLAJE DE ETIQUETAS A LOS MUEBLES ---
+                // Ajustamos las coordenadas para que queden sobre el televisor, sofá, estufa, etc.
+                etiquetas = [
+                    // Sala (Sobre el televisor/centro)
+                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
+                    // Cocina (Sobre la estufa/nevera, a la izquierda)
+                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
+                    // Habitación Principal (Fondo izquierda, sobre la cama)
+                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                    // Habitación Secundaria (Fondo derecha, sobre la cama)
+                    { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
+                    // Baño (A la derecha, cerca de la entrada)
+                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
+                ];
+
+                etiquetas.forEach(item => { item.element.style.display = 'block'; });
             });
         }
 
@@ -259,7 +272,7 @@
                 
                 controls.getObject().position.set(0, 1.6, 10); 
                 ubicacionActual = "pasillo";
-                mostrarEtiquetas(false); 
+                document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
             });
         }
 
@@ -275,7 +288,6 @@
             grupo.position.z = -center.z * scaleFactor;
         }
 
-        // --- CREACIÓN DEL PASILLO CON PAREDES SÓLIDAS ---
         function crearPasillo() {
             grupoPasillo = new THREE.Group();
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
@@ -287,23 +299,18 @@
 
             const largoPasillo = 10, anchoPasillo = 3.0, alturaTechoPasillo = 2.8;
 
-            // Piso y Techo del Pasillo
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 5); grupoPasillo.add(piso);
 
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
 
-            // Pared Izquierda Sólida
             const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredIzq.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredIzq);
 
-            // Pared Derecha Sólida
             const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredDer.position.set(anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredDer);
 
-            // --- PUERTA 1 (FONDO) ---
-            // Pared del fondo con hueco
             const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
             paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoIzq);
             const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
@@ -311,7 +318,6 @@
             const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTechoPasillo - 2.1, 0.2), matPared);
             dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.1); grupoPasillo.add(dintel);
 
-            // Marco y puerta
             const marcoFondo = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.2, 0.1), matMarco);
             marcoFondo.position.set(0, 1.1, 0.15); grupoPasillo.add(marcoFondo);
             const hojaPuerta1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
@@ -323,8 +329,6 @@
             portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
             portalFondo.position.set(0, 1.05, 0.2); grupoPasillo.add(portalFondo);
 
-            // --- PUERTA 2 (DERECHA) ---
-            // Simplemente adosamos el marco a la pared derecha
             const marcoDer = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoDer.position.set(anchoPasillo/2 - 0.1, 1.1, 5); grupoPasillo.add(marcoDer);
             const puertaDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
@@ -333,7 +337,6 @@
             portalDer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
             portalDer.position.set(anchoPasillo/2 - 0.2, 1.05, 5); grupoPasillo.add(portalDer);
 
-            // --- PUERTA 3 (IZQUIERDA) ---
             const marcoIzq = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoIzq.position.set(-anchoPasillo/2 + 0.1, 1.1, 5); grupoPasillo.add(marcoIzq);
             const puertaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
@@ -342,7 +345,6 @@
             portalIzq = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
             portalIzq.position.set(-anchoPasillo/2 + 0.2, 1.05, 5); grupoPasillo.add(portalIzq);
 
-            // --- ASCENSOR ---
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10); grupoPasillo.add(pisoAsc);
 
@@ -356,26 +358,6 @@
             marcoAsc.position.set(0, 1.2, 10.1); grupoPasillo.add(marcoAsc);
             
             scene.add(grupoPasillo);
-        }
-
-        // --- ETIQUETAS 3D (Ancladas al espacio del apartamento) ---
-        function mostrarEtiquetas(mostrar) {
-            const ets = document.querySelectorAll('.etiqueta-3d');
-            ets.forEach(e => e.style.display = mostrar ? 'block' : 'none');
-            
-            if(mostrar) {
-                // Estas son las coordenadas REALES en el modelo 3D.
-                // Al estar ancladas al mundo, si te alejas, se alejan.
-                etiquetas = [
-                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 1.8, 1.5) }, // Izquierda, cerca
-                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 1.8, 1.5) }, // Derecha, cerca
-                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 1.8, -1.0) }, // Centro
-                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 1.8, -4.0) }, // Izquierda, fondo
-                    { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 1.8, -4.0) } // Derecha, fondo
-                ];
-            } else {
-                etiquetas = [];
-            }
         }
 
         function cambiarNivel(destino) {
@@ -393,31 +375,42 @@
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
-                    ambientLight.color.setHex(0xffffff); // Blanco natural
-                    mostrarEtiquetas(true);
+                    ambientLight.color.setHex(0xffffff);
+                    document.getElementById('etiqueta-sala').style.display = 'block';
+                    document.getElementById('etiqueta-cocina').style.display = 'block';
+                    document.getElementById('etiqueta-habitacion1').style.display = 'block';
+                    document.getElementById('etiqueta-habitacion2').style.display = 'block';
+                    document.getElementById('etiqueta-bano').style.display = 'block';
                 } 
                 else if (destino === "apto2") {
                     ubicacionActual = "apto2";
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
-                    ambientLight.color.setHex(0xffaa77); // Cálido
-                    mostrarEtiquetas(true);
+                    ambientLight.color.setHex(0xffaa77);
+                    document.getElementById('etiqueta-sala').style.display = 'block';
+                    document.getElementById('etiqueta-cocina').style.display = 'block';
+                    document.getElementById('etiqueta-habitacion1').style.display = 'block';
+                    document.getElementById('etiqueta-habitacion2').style.display = 'block';
+                    document.getElementById('etiqueta-bano').style.display = 'block';
                 } 
                 else if (destino === "apto3") {
                     ubicacionActual = "apto3";
                     grupoAptoTipo.visible = true;
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
-                    ambientLight.color.setHex(0x88bbff); // Frío
-                    mostrarEtiquetas(true);
+                    ambientLight.color.setHex(0x88bbff);
+                    document.getElementById('etiqueta-sala').style.display = 'block';
+                    document.getElementById('etiqueta-cocina').style.display = 'block';
+                    document.getElementById('etiqueta-habitacion1').style.display = 'block';
+                    document.getElementById('etiqueta-habitacion2').style.display = 'block';
+                    document.getElementById('etiqueta-bano').style.display = 'block';
                 } 
                 else if (destino === "pasillo") {
                     ubicacionActual = "pasillo";
                     grupoPasillo.visible = true;
                     controls.getObject().position.set(0, 1.6, 1.5); 
                     ambientLight.color.setHex(0xffffff);
-                    mostrarEtiquetas(false);
                 }
                 transicionEnCurso = false;
             }, 500);
@@ -445,7 +438,7 @@
                 }
             }
 
-            // Lógica de proyección de etiquetas 3D
+            // Lógica de proyección de etiquetas 3D con efecto de escala por distancia
             if (animacionActiva && etiquetas.length > 0) {
                 etiquetas.forEach(item => {
                     const vector = item.posicion.clone(); 
@@ -454,13 +447,17 @@
                     const x = (vector.x * .5 + .5) * window.innerWidth; 
                     const y = (-(vector.y * .5) + .5) * window.innerHeight;
                     
-                    // Si la etiqueta está detrás de la cámara o muy lejos, se oculta
                     if (vector.z > 1) { 
                         item.element.style.opacity = 0; 
                     } else { 
                         item.element.style.opacity = 1; 
                         item.element.style.left = `${x}px`; 
                         item.element.style.top = `${y}px`; 
+
+                        // Efecto de escala: Si la cámara está lejos, la etiqueta se ve más pequeña
+                        const distancia = camera.position.distanceTo(item.posicion);
+                        const escala = Math.max(0.5, Math.min(1.5, 5 / distancia)); // Ajusta estos valores si quieres que se vean más o menos grandes
+                        item.element.style.transform = `translate(-50%, -50%) scale(${escala})`;
                     }
                 });
             }
