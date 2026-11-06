@@ -55,11 +55,11 @@
         <div class="contenedor-proyectos">
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio')">
                 <h3>Torres del Club</h3>
-                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>2 Baños</div>
+                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>1 Baño</div>
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Multifamiliar Corea</h3>
-                <div class="especificacion">Área: 95 m²<br>2 Habitaciones<br>2 Baños</div>
+                <div class="especificacion">Área: 95 m²<br>2 Habitaciones<br>1 Baño</div>
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Reservas de la Merced</h3>
@@ -67,7 +67,7 @@
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
                 <h3>Mirador de la Pampa</h3>
-                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>2 Baños</div>
+                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>1 Baño</div>
             </div>
         </div>
     </div>
@@ -77,6 +77,7 @@
     <div id="info">Haz clic para entrar. (Usa W, A, S, D y el mouse)</div>
     <div id="loading">CARGANDO...</div>
 
+    <!-- ETIQUETAS (Ya solo hay una de baño) -->
     <div id="etiqueta-sala" class="etiqueta-3d">Sala / Comedor <span>Área: 24 m²</span></div>
     <div id="etiqueta-cocina" class="etiqueta-3d">Cocina <span>Área: 12 m²</span></div>
     <div id="etiqueta-habitacion1" class="etiqueta-3d">Habitación Principal <span>Área: 15 m²</span></div>
@@ -414,29 +415,20 @@
                 }
             }
 
-            // --- CORRECCIÓN DE LAS ETIQUETAS 3D ---
             if (animacionActiva && etiquetas.length > 0) {
                 etiquetas.forEach(item => {
-                    // Copiamos la posición real del 3D
                     const vector = item.posicion.clone(); 
-                    
-                    // Proyectamos esa posición 3D a coordenadas 2D de la pantalla
                     vector.project(camera);
 
-                    // Convertimos a píxeles de la ventana
                     const x = (vector.x * .5 + .5) * window.innerWidth; 
                     const y = (-(vector.y * .5) + .5) * window.innerHeight;
                     
-                    // Si la etiqueta está detrás de la cámara, se oculta
                     if (vector.z > 1) { 
                         item.element.style.opacity = 0; 
                     } else { 
                         item.element.style.opacity = 1; 
-                        // Aquí se posiciona el cartel en su lugar exacto del mundo 3D
                         item.element.style.left = `${x}px`; 
                         item.element.style.top = `${y}px`; 
-                        
-                        // Efecto de escala: Si te alejas, se hace más pequeño
                         const distancia = camera.position.distanceTo(item.posicion);
                         const escala = Math.max(0.5, Math.min(1.5, 5 / distancia)); 
                         item.element.style.transform = `translate(-50%, -50%) scale(${escala})`;
