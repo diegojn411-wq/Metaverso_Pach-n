@@ -15,68 +15,31 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 1000; transition: opacity 0.8s ease;
         }
-        #menu-inicio::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 20, 15, 0.85); z-index: -1; 
-        }
+        #menu-inicio::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 20, 15, 0.85); z-index: -1; }
 
-        .logo-img {
-            width: 280px; 
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
-            background-color: rgba(255, 255, 255, 0.95); 
-            padding: 15px 30px;
-            border-radius: 10px;
-        }
-
+        .logo-img { width: 280px; margin-bottom: 20px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); background-color: rgba(255, 255, 255, 0.95); padding: 15px 30px; border-radius: 10px; }
         .subtitulo { font-size: 1.2rem; font-weight: 300; color: #a3e4d7; margin-bottom: 50px; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         .contenedor-proyectos { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; max-width: 1200px; }
         
-        /* Tarjetas con Especificaciones Técnicas */
         .tarjeta-proyecto {
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border-radius: 12px; padding: 30px 20px; width: 220px; text-align: center;
             cursor: pointer; transition: all 0.4s ease; position: relative; overflow: hidden;
         }
-        .tarjeta-proyecto:hover {
-            background: rgba(255, 255, 255, 0.1); transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.5); border-color: #198754;
-        }
+        .tarjeta-proyecto:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.5); border-color: #198754; }
         .tarjeta-proyecto h3 { margin: 0; font-size: 1.2rem; font-weight: 600; color: #ffffff; }
         
-        /* Texto de especificaciones (oculto por defecto, visible al hacer hover) */
-        .especificacion {
-            max-height: 0; opacity: 0; overflow: hidden;
-            transition: all 0.4s ease; font-size: 0.85rem; color: #a3e4d7;
-            margin-top: 0; line-height: 1.5;
-        }
-        .tarjeta-proyecto:hover .especificacion {
-            max-height: 100px; opacity: 1; margin-top: 15px;
-        }
+        .especificacion { max-height: 0; opacity: 0; overflow: hidden; transition: all 0.4s ease; font-size: 0.85rem; color: #a3e4d7; margin-top: 0; line-height: 1.5; }
+        .tarjeta-proyecto:hover .especificacion { max-height: 100px; opacity: 1; margin-top: 15px; }
 
         /* --- VISOR 3D --- */
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: none; }
-        
-        #btn-volver {
-            position: absolute; top: 30px; left: 30px; z-index: 100;
-            background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3);
-            padding: 12px 25px; border-radius: 30px; cursor: pointer; display: none;
-            font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 14px;
-            transition: 0.3s; text-decoration: none; backdrop-filter: blur(5px);
-        }
+        #btn-volver { position: absolute; top: 30px; left: 30px; z-index: 100; background: rgba(0,0,0,0.6); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 12px 25px; border-radius: 30px; cursor: pointer; display: none; font-family: 'Montserrat', sans-serif; font-weight: 500; font-size: 14px; transition: 0.3s; text-decoration: none; backdrop-filter: blur(5px); }
         #btn-volver:hover { background: #198754; border-color: #198754; color: #fff; }
 
-        /* ETIQUETAS 3D */
-        .etiqueta-3d {
-            position: absolute; background: rgba(15, 25, 20, 0.9); color: #ffffff;
-            padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 500;
-            border-left: 4px solid #198754; pointer-events: none; z-index: 10;
-            transform: translate(-50%, -50%); display: none;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px); white-space: nowrap;
-        }
+        .etiqueta-3d { position: absolute; background: rgba(15, 25, 20, 0.9); color: #ffffff; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 500; border-left: 4px solid #198754; pointer-events: none; z-index: 10; transform: translate(-50%, -50%); display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.5); backdrop-filter: blur(4px); white-space: nowrap; }
         .etiqueta-3d span { font-size: 11px; color: #94a3b8; display: block; margin-top: 4px; font-weight: 300; }
         
         #info { position: absolute; top: 30px; width: 100%; text-align: center; color: white; pointer-events: none; z-index: 100; font-size: 16px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.8); display: none; }
@@ -85,7 +48,6 @@
 </head>
 <body>
 
-    <!-- MENÚ PREMIUM -->
     <div id="menu-inicio">
         <img src="logo.png" alt="J.Pachón Constructora" class="logo-img">
         <div class="subtitulo">Experiencias Inmobiliarias</div>
@@ -110,13 +72,11 @@
         </div>
     </div>
 
-    <!-- VISOR 3D -->
     <div id="canvas-container"></div>
     <a href="#" id="btn-volver" onclick="volverAlMenu(); return false;">← Volver al Menú</a>
     <div id="info">Haz clic para entrar. (Usa W, A, S, D y el mouse)</div>
     <div id="loading">CARGANDO...</div>
 
-    <!-- ETIQUETAS -->
     <div id="etiqueta-sala" class="etiqueta-3d">Sala / Comedor <span>Área: 24 m²</span></div>
     <div id="etiqueta-cocina" class="etiqueta-3d">Cocina <span>Área: 12 m²</span></div>
     <div id="etiqueta-habitacion1" class="etiqueta-3d">Habitación Principal <span>Área: 15 m²</span></div>
@@ -130,6 +90,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
         import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
         let camera, scene, renderer, controls;
@@ -144,9 +105,9 @@
         let ambientLight;
 
         let ubicacionActual = "pasillo";
-        let modeloAptoTipo, grupoAptoTipo, grupoPasillo;
+        let modeloAptoTipo, modeloApto3Hab, grupoAptoTipo, grupoApto3Hab, grupoPasillo;
         let portalFondo, portalIzq, portalDer;
-        let techoTipo;
+        let techoTipo, techo3Hab;
 
         function init3D() {
             const container = document.getElementById('canvas-container');
@@ -209,8 +170,68 @@
             renderer = null;
         }
 
-        function cargarApartamento() {
+        function cargarEdificio() {
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            
             const loader = new GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
+
+            // AQUÍ ESTÁ EL NUEVO NOMBRE DEL ARCHIVO COMPRIMIDO
+            const url3Hab = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_3hab-compressed.glb?v=1'; 
+            const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
+
+            loader.load(url3Hab, function (gltf3) {
+                modeloApto3Hab = gltf3.scene;
+                grupoApto3Hab = new THREE.Group();
+                grupoApto3Hab.add(modeloApto3Hab);
+                
+                grupoApto3Hab.rotation.z = -Math.PI / 2; 
+                
+                configurarModelo(grupoApto3Hab);
+                grupoApto3Hab.visible = false;
+                scene.add(grupoApto3Hab);
+
+                const box3 = new THREE.Box3().setFromObject(grupoApto3Hab);
+                const size3 = box3.getSize(new THREE.Vector3());
+                techo3Hab = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 }));
+                techo3Hab.rotation.x = Math.PI / 2;
+                techo3Hab.position.set(0, size3.y, 0);
+                techo3Hab.visible = false;
+                scene.add(techo3Hab);
+
+                loader.load(urlTipo, function (gltfT) {
+                    modeloAptoTipo = gltfT.scene;
+                    grupoAptoTipo = new THREE.Group();
+                    grupoAptoTipo.add(modeloAptoTipo);
+                    configurarModelo(grupoAptoTipo);
+                    grupoAptoTipo.visible = false;
+                    scene.add(grupoAptoTipo);
+
+                    const boxT = new THREE.Box3().setFromObject(grupoAptoTipo);
+                    const sizeT = boxT.getSize(new THREE.Vector3());
+                    techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 }));
+                    techoTipo.rotation.x = Math.PI / 2;
+                    techoTipo.position.set(0, sizeT.y, 0);
+                    techoTipo.visible = false;
+                    scene.add(techoTipo);
+
+                    crearPasillo();
+                    document.getElementById('loading').style.display = 'none';
+                    controls.getObject().position.set(0, 1.6, 10); 
+                    ubicacionActual = "pasillo";
+                    document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
+                });
+            });
+        }
+
+        function cargarApartamento() {
+            const dracoLoader = new DRACOLoader();
+            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+            
+            const loader = new GLTFLoader();
+            loader.setDRACOLoader(dracoLoader);
+
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
 
             loader.load(urlTipo, function (gltf) {
@@ -238,7 +259,6 @@
                 document.getElementById('loading').style.display = 'none';
                 controls.getObject().position.set(0, 1.6, 3); 
 
-                // Configurar etiquetas
                 etiquetas = [
                     { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
                     { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
@@ -246,40 +266,7 @@
                     { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
                     { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
                 ];
-
-                // MOSTRAR ETIQUETAS (CORREGIDO)
                 etiquetas.forEach(item => { item.element.style.display = 'block'; });
-            });
-        }
-
-        function cargarEdificio() {
-            const loader = new GLTFLoader();
-            const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
-
-            loader.load(urlTipo, function (gltf) {
-                modeloAptoTipo = gltf.scene;
-                grupoAptoTipo = new THREE.Group();
-                grupoAptoTipo.add(modeloAptoTipo);
-                configurarModelo(grupoAptoTipo);
-                grupoAptoTipo.visible = false; 
-                scene.add(grupoAptoTipo);
-
-                const box = new THREE.Box3().setFromObject(grupoAptoTipo);
-                const size = box.getSize(new THREE.Vector3());
-                
-                const techoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.8 });
-                techoTipo = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), techoMat);
-                techoTipo.rotation.x = Math.PI / 2;
-                techoTipo.position.set(0, size.y, 0);
-                techoTipo.visible = false;
-                scene.add(techoTipo);
-
-                crearPasillo();
-                document.getElementById('loading').style.display = 'none';
-                
-                controls.getObject().position.set(0, 1.6, 10); 
-                ubicacionActual = "pasillo";
-                document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
             });
         }
 
@@ -290,8 +277,10 @@
             const maxSize = Math.max(size.x, size.y, size.z);
             const scaleFactor = 10 / maxSize; 
             grupo.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            
+            const boxFinal = new THREE.Box3().setFromObject(grupo);
             grupo.position.x = -center.x * scaleFactor;
-            grupo.position.y = -box.min.y * scaleFactor; 
+            grupo.position.y = -boxFinal.min.y; 
             grupo.position.z = -center.z * scaleFactor;
         }
 
@@ -373,16 +362,26 @@
             
             grupoPasillo.visible = false;
             grupoAptoTipo.visible = false;
+            grupoApto3Hab.visible = false;
             techoTipo.visible = false;
+            techo3Hab.visible = false;
             document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
 
             setTimeout(() => {
-                if (destino === "apto1") {
-                    ubicacionActual = "apto1";
-                    grupoAptoTipo.visible = true;
-                    techoTipo.visible = true;
+                if (destino === "fondo") {
+                    ubicacionActual = "fondo";
+                    grupoApto3Hab.visible = true;
+                    techo3Hab.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffffff);
+                    
+                    etiquetas = [
+                        { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
+                        { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
+                        { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                        { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
+                        { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
+                    ];
                     etiquetas.forEach(item => item.element.style.display = 'block');
                 } 
                 else if (destino === "apto2") {
@@ -391,6 +390,14 @@
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffaa77);
+                    
+                    etiquetas = [
+                        { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
+                        { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
+                        { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                        { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
+                        { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
+                    ];
                     etiquetas.forEach(item => item.element.style.display = 'block');
                 } 
                 else if (destino === "apto3") {
@@ -399,6 +406,14 @@
                     techoTipo.visible = true;
                     controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0x88bbff);
+                    
+                    etiquetas = [
+                        { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
+                        { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
+                        { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                        { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
+                        { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
+                    ];
                     etiquetas.forEach(item => item.element.style.display = 'block');
                 } 
                 else if (destino === "pasillo") {
@@ -424,10 +439,10 @@
                     const pos = controls.getObject().position;
                     if (ubicacionActual === "pasillo") {
                         const jugadorBox = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(pos.x, 1.0, pos.z), new THREE.Vector3(0.4, 1.8, 0.4));
-                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalFondo))) cambiarNivel("apto1");
+                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalFondo))) cambiarNivel("fondo");
                         if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalDer))) cambiarNivel("apto2");
                         if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalIzq))) cambiarNivel("apto3");
-                    } else if (ubicacionActual === "apto1" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
+                    } else if (ubicacionActual === "fondo" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
                         if (pos.z > 5.0) cambiarNivel("pasillo"); 
                     }
                 }
