@@ -326,6 +326,7 @@
             marcoAsc.position.set(0, 1.2, 10.1); grupoPasillo.add(marcoAsc);
             
             controls.getObject().position.set(0, 1.6, 10); 
+            controls.getObject().rotation.set(0, 0, 0); // Cámara derecha
             scene.add(grupoPasillo);
         }
 
@@ -339,7 +340,8 @@
             const matPuerta = new THREE.MeshStandardMaterial({ color: 0x3a1e0c, roughness: 0.5 }); 
             const matMetal = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.9, roughness: 0.1 }); 
 
-            const largoPasillo = 10, anchoPasillo = 4.0, alturaTechoPasillo = 2.8;
+            // Medidas: Largo 10, Ancho 3, Altura 2.8
+            const largoPasillo = 10, anchoPasillo = 3.0, alturaTechoPasillo = 2.8;
 
             const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
             piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 5); grupoPasillo.add(piso);
@@ -347,29 +349,25 @@
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
 
-            // Pared Izquierda (Con hueco para el ascensor en el centro, metro 5)
+            // Pared Izquierda (Ascensor en el centro)
             const paredIzq1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 3.75), matPared);
             paredIzq1.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 1.875); grupoPasillo.add(paredIzq1);
             const paredIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 3.75), matPared);
             paredIzq2.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 8.125); grupoPasillo.add(paredIzq2);
 
-            // ASCENSOR empotrado en la pared izquierda
+            // ASCENSOR empotrado
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(-anchoPasillo/2 + 0.6, 0.01, 5); grupoPasillo.add(pisoAsc);
-            
             const fondoAsc = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.3, 2.5), matMetal);
             fondoAsc.position.set(-anchoPasillo/2 - 0.5, 1.15, 5); grupoPasillo.add(fondoAsc);
-
             const puertaAsc1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.3, 1.25), matMetal);
             puertaAsc1.position.set(-anchoPasillo/2 + 0.1, 1.15, 4.375); grupoPasillo.add(puertaAsc1);
-
             const puertaAsc2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.3, 1.25), matMetal);
             puertaAsc2.position.set(-anchoPasillo/2 + 0.1, 1.15, 5.625); grupoPasillo.add(puertaAsc2);
-
             const marcoAsc = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 3.0), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
             marcoAsc.position.set(-anchoPasillo/2, 1.25, 5); grupoPasillo.add(marcoAsc);
 
-            // Pared Derecha (Con 2 puertas en Metro 3 y Metro 8)
+            // Pared Derecha (Con 2 puertas)
             const paredDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
             paredDer1.position.set(anchoPasillo/2, alturaTechoPasillo/2, 1.25); grupoPasillo.add(paredDer1);
             const paredDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
@@ -416,9 +414,9 @@
             const paredFondo = new THREE.Mesh(new THREE.BoxGeometry(anchoPasillo, alturaTechoPasillo, 0.2), matPared);
             paredFondo.position.set(0, alturaTechoPasillo/2, 10); grupoPasillo.add(paredFondo);
 
-            // Cámara al lado del ascensor
-            controls.getObject().position.set(-anchoPasillo/2 + 1.0, 1.6, 5); 
-            controls.getObject().rotation.y = Math.PI / 2; // Mira hacia la pared derecha
+            // Cámara a la derecha, mirando al frente
+            controls.getObject().position.set(1.0, 1.6, 5); 
+            controls.getObject().rotation.set(0, 0, 0); // Cámara recta
             scene.add(grupoPasillo);
         }
 
@@ -436,6 +434,7 @@
                 grupoAptoTipo.visible = true;
                 techoTipo.visible = true;
                 controls.getObject().position.set(0, 1.6, 3); 
+                controls.getObject().rotation.set(0, 0, 0);
                 
                 if (destino === "fondo") {
                     ambientLight.color.setHex(0xffffff);
@@ -486,10 +485,11 @@
                         grupoPasillo.visible = true;
                         document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
                         if (modoExperiencia === 'edificio_pampa') {
-                            controls.getObject().position.set(-anchoPasillo/2 + 1.0, 1.6, 5);
-                            controls.getObject().rotation.y = Math.PI / 2;
+                            controls.getObject().position.set(1.0, 1.6, 5);
+                            controls.getObject().rotation.set(0, 0, 0);
                         } else {
                             controls.getObject().position.set(0, 1.6, 1.5);
+                            controls.getObject().rotation.set(0, 0, 0);
                         }
                         ubicacionActual = "pasillo";
                         setTimeout(() => { transicionEnCurso = false; }, 500);
