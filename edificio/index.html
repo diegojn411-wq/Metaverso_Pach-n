@@ -355,7 +355,7 @@
             const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredDer.position.set(anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredDer);
 
-            // Pared frontal (con puerta al fondo)
+            // Pared frontal con puerta al fondo
             const paredFrenteIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
             paredFrenteIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFrenteIzq);
             const paredFrenteDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
