@@ -348,14 +348,14 @@
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
 
-            // Paredes laterales sólidas (sin huecos)
+            // Paredes LATERALES MACIZAS (sin huecos)
             const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredIzq.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredIzq);
 
             const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredDer.position.set(anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredDer);
 
-            // Pared frontal con hueco para puerta
+            // Pared frontal (con puerta al fondo)
             const paredFrenteIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
             paredFrenteIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFrenteIzq);
             const paredFrenteDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
@@ -372,7 +372,7 @@
             portalFrente.position.set(0, 1.05, 0.2); grupoPasillo.add(portalFrente);
             portales.push(portalFrente);
 
-            // Pared del fondo (detrás del inicio)
+            // Pared de Fondo (detrás del inicio)
             const paredFondo = new THREE.Mesh(new THREE.BoxGeometry(anchoPasillo, alturaTechoPasillo, 0.2), matPared);
             paredFondo.position.set(0, alturaTechoPasillo/2, 10.1); grupoPasillo.add(paredFondo);
 
@@ -380,19 +380,15 @@
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(-anchoPasillo/2 + 0.6, 0.01, 5); grupoPasillo.add(pisoAsc);
             
-            const fondoAsc = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.3, 2.5), matMetal);
-            fondoAsc.position.set(-anchoPasillo/2 - 0.5, 1.15, 5); grupoPasillo.add(fondoAsc);
-
             const puertaAsc1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.3, 1.25), matMetal);
             puertaAsc1.position.set(-anchoPasillo/2 + 0.1, 1.15, 4.375); grupoPasillo.add(puertaAsc1);
-
             const puertaAsc2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.3, 1.25), matMetal);
             puertaAsc2.position.set(-anchoPasillo/2 + 0.1, 1.15, 5.625); grupoPasillo.add(puertaAsc2);
-
+            
             const marcoAsc = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.5, 3.0), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
             marcoAsc.position.set(-anchoPasillo/2, 1.25, 5); grupoPasillo.add(marcoAsc);
 
-            // Puertas en la pared izquierda (a los lados del ascensor)
+            // Puerta Lateral Izquierda 1 (Metro 2)
             const marcoIzq1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoIzq1.position.set(-anchoPasillo/2 + 0.1, 1.1, 2); grupoPasillo.add(marcoIzq1);
             const puertaIzq1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
@@ -401,6 +397,7 @@
             portalIzq1.position.set(-anchoPasillo/2 + 0.2, 1.05, 2); grupoPasillo.add(portalIzq1);
             portales.push(portalIzq1);
 
+            // Puerta Lateral Izquierda 2 (Metro 8)
             const marcoIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoIzq2.position.set(-anchoPasillo/2 + 0.1, 1.1, 8); grupoPasillo.add(marcoIzq2);
             const puertaIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
@@ -409,7 +406,7 @@
             portalIzq2.position.set(-anchoPasillo/2 + 0.2, 1.05, 8); grupoPasillo.add(portalIzq2);
             portales.push(portalIzq2);
 
-            // Puertas en la pared derecha (Metro 2 y Metro 8)
+            // Puerta Lateral Derecha 1 (Metro 2)
             const marcoDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoDer1.position.set(anchoPasillo/2 - 0.1, 1.1, 2); grupoPasillo.add(marcoDer1);
             const puertaDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
@@ -418,6 +415,7 @@
             portalDer1.position.set(anchoPasillo/2 - 0.2, 1.05, 2); grupoPasillo.add(portalDer1);
             portales.push(portalDer1);
 
+            // Puerta Lateral Derecha 2 (Metro 8)
             const marcoDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoDer2.position.set(anchoPasillo/2 - 0.1, 1.1, 8); grupoPasillo.add(marcoDer2);
             const puertaDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
@@ -426,9 +424,9 @@
             portalDer2.position.set(anchoPasillo/2 - 0.2, 1.05, 8); grupoPasillo.add(portalDer2);
             portales.push(portalDer2);
 
-            // Cámara mirando hacia la pared derecha (donde están las puertas)
-            controls.getObject().position.set(-anchoPasillo/2 + 0.5, 1.6, 5); 
-            controls.getObject().rotation.set(0, Math.PI / 2, 0); // Mira a la derecha
+            // Cámara frente al ascensor, mirando hacia el pasillo
+            controls.getObject().position.set(0, 1.6, 5); 
+            controls.getObject().rotation.set(0, 0, 0);
             scene.add(grupoPasillo);
         }
 
@@ -498,8 +496,8 @@
                         document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
                         
                         if (modoExperiencia === 'edificio_pampa') {
-                            controls.getObject().position.set(-anchoPasillo/2 + 0.5, 1.6, 5);
-                            controls.getObject().rotation.set(0, Math.PI / 2, 0);
+                            controls.getObject().position.set(0, 1.6, 5);
+                            controls.getObject().rotation.set(0, 0, 0);
                         } else {
                             controls.getObject().position.set(0, 1.6, 1.5);
                             controls.getObject().rotation.set(0, 0, 0);
