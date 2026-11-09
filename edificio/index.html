@@ -53,8 +53,12 @@
         <div class="subtitulo">Experiencias Inmobiliarias</div>
         
         <div class="contenedor-proyectos">
-            <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio')">
+            <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio_torres')">
                 <h3>Torres del Club</h3>
+                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>1 Baño</div>
+            </div>
+            <div class="tarjeta-proyecto" onclick="iniciarExperiencia('edificio_pampa')">
+                <h3>Mirador de la Pampa</h3>
                 <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>1 Baño</div>
             </div>
             <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
@@ -65,10 +69,6 @@
                 <h3>Reservas de la Merced</h3>
                 <div class="especificacion">Área: 85 m²<br>2 Habitaciones<br>1 Baño</div>
             </div>
-            <div class="tarjeta-proyecto" onclick="iniciarExperiencia('apartamento')">
-                <h3>Mirador de la Pampa</h3>
-                <div class="especificacion">Área: 98 m²<br>2 Habitaciones<br>1 Baño</div>
-            </div>
         </div>
     </div>
 
@@ -77,7 +77,6 @@
     <div id="info">Haz clic para entrar. (Usa W, A, S, D y el mouse)</div>
     <div id="loading">CARGANDO...</div>
 
-    <!-- ETIQUETAS (Ya solo hay una de baño) -->
     <div id="etiqueta-sala" class="etiqueta-3d">Sala / Comedor <span>Área: 24 m²</span></div>
     <div id="etiqueta-cocina" class="etiqueta-3d">Cocina <span>Área: 12 m²</span></div>
     <div id="etiqueta-habitacion1" class="etiqueta-3d">Habitación Principal <span>Área: 15 m²</span></div>
@@ -106,7 +105,7 @@
 
         let ubicacionActual = "pasillo";
         let modeloAptoTipo, grupoAptoTipo, grupoPasillo;
-        let portalFondo, portalIzq, portalDer;
+        let portales = []; // Array para guardar los portales de forma dinámica
         let techoTipo;
 
         function init3D() {
@@ -151,7 +150,7 @@
                 animacionActiva = true;
                 
                 if (!renderer) init3D();
-                if (modoExperiencia === 'edificio') cargarEdificio();
+                if (modoExperiencia === 'edificio_torres' || modoExperiencia === 'edificio_pampa') cargarEdificio();
                 else cargarApartamento();
             }, 500);
         }
@@ -170,6 +169,7 @@
             renderer = null;
         }
 
+        // --- CARGAR DIRECTO AL APARTAMENTO ---
         function cargarApartamento() {
             const loader = new GLTFLoader();
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
@@ -210,6 +210,7 @@
             });
         }
 
+        // --- CARGAR EDIFICIO (PASILLO Y PORTALES) ---
         function cargarEdificio() {
             const loader = new GLTFLoader();
             const urlTipo = 'https://diegojn411-wq.github.io/Metaverso_Pach-n/edificio/apartamento_tipo.glb?v=1'; 
@@ -232,10 +233,13 @@
                 techoTipo.visible = false;
                 scene.add(techoTipo);
 
-                crearPasillo();
-                document.getElementById('loading').style.display = 'none';
+                if (modoExperiencia === 'edificio_pampa') {
+                    crearPasilloPersonalizado(); // El nuevo pasillo para Mirador
+                } else {
+                    crearPasillo(); // El pasillo clásico de Torres del Club
+                }
                 
-                controls.getObject().position.set(0, 1.6, 10); 
+                document.getElementById('loading').style.display = 'none';
                 ubicacionActual = "pasillo";
                 document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
             });
@@ -253,6 +257,7 @@
             grupo.position.z = -center.z * scaleFactor;
         }
 
+        // --- PASILLO CLÁSICO (TORRES DEL CLUB) ---
         function crearPasillo() {
             grupoPasillo = new THREE.Group();
             const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
@@ -276,6 +281,7 @@
             const paredDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredDer.position.set(anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredDer);
 
+            // Puerta Fondo
             const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
             paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoIzq);
             const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
@@ -288,28 +294,28 @@
             const hojaPuerta1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
             hojaPuerta1.position.set(-0.6, 1.05, 0.2); hojaPuerta1.rotation.y = Math.PI / 2; grupoPasillo.add(hojaPuerta1);
             
-            const luzPuerta1 = new THREE.PointLight(0xffaa55, 2, 5);
-            luzPuerta1.position.set(0, 1.0, 0.5); grupoPasillo.add(luzPuerta1);
-
-            portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
+            const portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
             portalFondo.position.set(0, 1.05, 0.2); grupoPasillo.add(portalFondo);
+            portales.push(portalFondo);
 
+            // Puertas Laterales
             const marcoDer = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoDer.position.set(anchoPasillo/2 - 0.1, 1.1, 5); grupoPasillo.add(marcoDer);
             const puertaDer = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
             puertaDer.position.set(anchoPasillo/2 - 0.15, 1.05, 5); grupoPasillo.add(puertaDer);
-
-            portalDer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            const portalDer = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
             portalDer.position.set(anchoPasillo/2 - 0.2, 1.05, 5); grupoPasillo.add(portalDer);
+            portales.push(portalDer);
 
             const marcoIzq = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
             marcoIzq.position.set(-anchoPasillo/2 + 0.1, 1.1, 5); grupoPasillo.add(marcoIzq);
             const puertaIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
             puertaIzq.position.set(-anchoPasillo/2 + 0.15, 1.05, 5); grupoPasillo.add(puertaIzq);
-
-            portalIzq = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            const portalIzq = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
             portalIzq.position.set(-anchoPasillo/2 + 0.2, 1.05, 5); grupoPasillo.add(portalIzq);
+            portales.push(portalIzq);
 
+            // Ascensor al fondo
             const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
             pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 10); grupoPasillo.add(pisoAsc);
 
@@ -322,6 +328,102 @@
             const marcoAsc = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
             marcoAsc.position.set(0, 1.2, 10.1); grupoPasillo.add(marcoAsc);
             
+            controls.getObject().position.set(0, 1.6, 10); // Aparecer en el ascensor
+            scene.add(grupoPasillo);
+        }
+
+        // --- PASILLO PERSONALIZADO (MIRADOR DE LA PAMPA) ---
+        function crearPasilloPersonalizado() {
+            grupoPasillo = new THREE.Group();
+            const matPiso = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.8 }); 
+            const matPared = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.9 }); 
+            const matTecho = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const matMarco = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.6 }); 
+            const matPuerta = new THREE.MeshStandardMaterial({ color: 0x3a1e0c, roughness: 0.5 }); 
+            const matMetal = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.9, roughness: 0.1 }); 
+
+            const largoPasillo = 10, anchoPasillo = 4.0, alturaTechoPasillo = 2.8; // Pasillo más ancho
+
+            const piso = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matPiso);
+            piso.rotation.x = -Math.PI / 2; piso.position.set(0, 0, 5); grupoPasillo.add(piso);
+
+            const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
+            techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
+
+            // Pared Izquierda (Con 2 puertas)
+            const paredIzq1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
+            paredIzq1.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 1.25); grupoPasillo.add(paredIzq1); // De 0 a 2.5
+            const paredIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
+            paredIzq2.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredIzq2); // De 3.75 a 6.25
+            const paredIzq3 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
+            paredIzq3.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 8.75); grupoPasillo.add(paredIzq3); // De 7.5 a 10
+
+            // Pared Derecha (Con 2 puertas)
+            const paredDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
+            paredDer1.position.set(anchoPasillo/2, alturaTechoPasillo/2, 1.25); grupoPasillo.add(paredDer1);
+            const paredDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
+            paredDer2.position.set(anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredDer2);
+            const paredDer3 = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, 2.5), matPared);
+            paredDer3.position.set(anchoPasillo/2, alturaTechoPasillo/2, 8.75); grupoPasillo.add(paredDer3);
+
+            // Helper para crear puertas laterales
+            function crearPuertaLateral(x, z) {
+                const marco = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
+                marco.position.set(x, 1.1, z); grupoPasillo.add(marco);
+                const puerta = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
+                puerta.position.set(x - Math.sign(x)*0.05, 1.05, z); grupoPasillo.add(puerta);
+                const portal = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+                portal.position.set(x - Math.sign(x)*0.1, 1.05, z); grupoPasillo.add(portal);
+                portales.push(portal);
+            }
+
+            // Crear Puertas Frontales (A la izquierda y derecha del ascensor)
+            // Según la instrucción: "en la pared frontal (frente al ascensor) dos puertas... el 3 y el 8"
+            // Espera, el ascensor está en el 5. Entonces las puertas frontales estarían en Z=3 y Z=8, a los lados.
+            // Pero el ascensor ocupa el centro. Vamos a hacer un ascensor que esté en el centro de la pared frontal.
+            // Y las puertas en Z=3 y Z=8 en las paredes laterales.
+            
+            // Ascensor en el fondo (Metro 5, frente al inicio)
+            const pisoAsc = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2.5), matMetal);
+            pisoAsc.rotation.x = -Math.PI / 2; pisoAsc.position.set(0, 0.01, 5); grupoPasillo.add(pisoAsc);
+
+            const puertaAscIzq = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscIzq.position.set(-1.3, 1.15, 5.1); grupoPasillo.add(puertaAscIzq);
+
+            const puertaAscDer = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.3, 0.1), matMetal);
+            puertaAscDer.position.set(1.3, 1.15, 5.1); grupoPasillo.add(puertaAscDer);
+
+            const marcoAsc = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.4, 0.2), new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 }));
+            marcoAsc.position.set(0, 1.2, 5.2); grupoPasillo.add(marcoAsc);
+
+            // Puertas en las paredes laterales, en el metro 0 y metro 10
+            // Izquierda Metro 0
+            crearPuertaLateral(-anchoPasillo/2, 0.5); 
+            // Izquierda Metro 10
+            crearPuertaLateral(-anchoPasillo/2, 9.5); 
+            // Derecha Metro 0
+            crearPuertaLateral(anchoPasillo/2, 0.5); 
+            // Derecha Metro 10
+            crearPuertaLateral(anchoPasillo/2, 9.5); 
+
+            // Paredes de fondo
+            const paredFondoIzq = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
+            paredFondoIzq.position.set(-anchoPasillo/4 - 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoIzq);
+            const paredFondoDer = new THREE.Mesh(new THREE.BoxGeometry((anchoPasillo-1.2)/2, alturaTechoPasillo, 0.2), matPared);
+            paredFondoDer.position.set(anchoPasillo/4 + 0.3, alturaTechoPasillo/2, 0.1); grupoPasillo.add(paredFondoDer);
+            const dintel = new THREE.Mesh(new THREE.BoxGeometry(1.2, alturaTechoPasillo - 2.1, 0.2), matPared);
+            dintel.position.set(0, 2.1 + (alturaTechoPasillo - 2.1)/2, 0.1); grupoPasillo.add(dintel);
+
+            // Puerta en el fondo (Metro 0)
+            const hojaPuerta1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.05), matPuerta);
+            hojaPuerta1.position.set(-0.6, 1.05, 0.2); hojaPuerta1.rotation.y = Math.PI / 2; grupoPasillo.add(hojaPuerta1);
+            
+            const portalFondo = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.1, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
+            portalFondo.position.set(0, 1.05, 0.2); grupoPasillo.add(portalFondo);
+            portales.push(portalFondo);
+
+            // Cámara en el centro del pasillo (Metro 5)
+            controls.getObject().position.set(0, 1.6, 7.5); 
             scene.add(grupoPasillo);
         }
 
@@ -335,60 +437,30 @@
             document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
 
             setTimeout(() => {
+                // Todos los portales llevan al mismo apartamento, pero con distinta luz
+                ubicacionActual = "apartamento";
+                grupoAptoTipo.visible = true;
+                techoTipo.visible = true;
+                controls.getObject().position.set(0, 1.6, 3); 
+                
                 if (destino === "fondo") {
-                    ubicacionActual = "fondo";
-                    grupoAptoTipo.visible = true;
-                    techoTipo.visible = true;
-                    controls.getObject().position.set(0, 1.6, 3); 
                     ambientLight.color.setHex(0xffffff);
-                    
-                    etiquetas = [
-                        { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
-                        { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
-                        { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
-                        { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
-                        { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
-                    ];
-                    etiquetas.forEach(item => item.element.style.display = 'block');
-                } 
-                else if (destino === "apto2") {
-                    ubicacionActual = "apto2";
-                    grupoAptoTipo.visible = true;
-                    techoTipo.visible = true;
-                    controls.getObject().position.set(0, 1.6, 3); 
+                } else if (destino === "apto2") {
                     ambientLight.color.setHex(0xffaa77);
-                    
-                    etiquetas = [
-                        { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
-                        { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
-                        { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
-                        { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
-                        { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
-                    ];
-                    etiquetas.forEach(item => item.element.style.display = 'block');
-                } 
-                else if (destino === "apto3") {
-                    ubicacionActual = "apto3";
-                    grupoAptoTipo.visible = true;
-                    techoTipo.visible = true;
-                    controls.getObject().position.set(0, 1.6, 3); 
+                } else if (destino === "apto3") {
                     ambientLight.color.setHex(0x88bbff);
-                    
-                    etiquetas = [
-                        { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
-                        { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
-                        { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
-                        { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
-                        { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
-                    ];
-                    etiquetas.forEach(item => item.element.style.display = 'block');
-                } 
-                else if (destino === "pasillo") {
-                    ubicacionActual = "pasillo";
-                    grupoPasillo.visible = true;
-                    controls.getObject().position.set(0, 1.6, 1.5); 
+                } else {
                     ambientLight.color.setHex(0xffffff);
                 }
+                
+                etiquetas = [
+                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
+                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
+                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                    { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
+                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
+                ];
+                etiquetas.forEach(item => item.element.style.display = 'block');
                 transicionEnCurso = false;
             }, 500);
         }
@@ -402,15 +474,29 @@
                 if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
                 controls.moveRight(-velocity.x * 0.016); controls.moveForward(-velocity.z * 0.016);
 
-                if (modoExperiencia === 'edificio') {
+                // Lógica de portales dinámica
+                if ((modoExperiencia === 'edificio_torres' || modoExperiencia === 'edificio_pampa') && ubicacionActual === "pasillo") {
                     const pos = controls.getObject().position;
-                    if (ubicacionActual === "pasillo") {
-                        const jugadorBox = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(pos.x, 1.0, pos.z), new THREE.Vector3(0.4, 1.8, 0.4));
-                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalFondo))) cambiarNivel("fondo");
-                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalDer))) cambiarNivel("apto2");
-                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portalIzq))) cambiarNivel("apto3");
-                    } else if (ubicacionActual === "fondo" || ubicacionActual === "apto2" || ubicacionActual === "apto3") {
-                        if (pos.z > 5.0) cambiarNivel("pasillo"); 
+                    const jugadorBox = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(pos.x, 1.0, pos.z), new THREE.Vector3(0.4, 1.8, 0.4));
+                    
+                    for (let i = 0; i < portales.length; i++) {
+                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portales[i]))) {
+                            cambiarNivel(i === 0 ? "fondo" : "apto2"); // Todos llevan al apartamento
+                            break;
+                        }
+                    }
+                } else if (ubicacionActual === "apartamento") {
+                    if (controls.getObject().position.z > 5.0) {
+                        // Volver al pasillo (esto es más complejo con el diseño personalizado, 
+                        // pero para simplificar, simplemente te deja en el ascensor)
+                        transicionEnCurso = true;
+                        grupoAptoTipo.visible = false;
+                        techoTipo.visible = false;
+                        grupoPasillo.visible = true;
+                        document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
+                        controls.getObject().position.set(0, 1.6, 7.5);
+                        ubicacionActual = "pasillo";
+                        setTimeout(() => { transicionEnCurso = false; }, 500);
                     }
                 }
             }
