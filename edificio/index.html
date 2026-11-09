@@ -486,7 +486,7 @@
                         grupoPasillo.visible = true;
                         document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
                         if (modoExperiencia === 'edificio_pampa') {
-                            controls.getObject().position.set(-2.0 + 1.0, 1.6, 5);
+                            controls.getObject().position.set(-anchoPasillo/2 + 1.0, 1.6, 5);
                             controls.getObject().rotation.y = Math.PI / 2;
                         } else {
                             controls.getObject().position.set(0, 1.6, 1.5);
