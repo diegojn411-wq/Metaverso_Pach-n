@@ -348,7 +348,7 @@
             const techo = new THREE.Mesh(new THREE.PlaneGeometry(anchoPasillo, largoPasillo), matTecho);
             techo.rotation.x = Math.PI / 2; techo.position.set(0, alturaTechoPasillo, 5); grupoPasillo.add(techo);
 
-            // Paredes LATERALES MACIZAS (sin huecos)
+            // Paredes laterales sólidas
             const paredIzq = new THREE.Mesh(new THREE.BoxGeometry(0.1, alturaTechoPasillo, largoPasillo), matPared);
             paredIzq.position.set(-anchoPasillo/2, alturaTechoPasillo/2, 5); grupoPasillo.add(paredIzq);
 
