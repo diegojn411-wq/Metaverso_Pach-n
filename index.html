@@ -101,7 +101,9 @@
         let modoExperiencia = "apartamento"; 
         let transicionEnCurso = false;
         let etiquetas = [];
-        let ambientLight;
+        
+        // Luces separadas
+        let luzPasillo, luzApartamento;
 
         let ubicacionActual = "pasillo";
         let modeloAptoTipo, grupoAptoTipo, grupoPasillo;
@@ -117,8 +119,19 @@
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.up.set(0, 1, 0);
 
-            ambientLight = new THREE.AmbientLight(0xffffff, 1.5); scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); dirLight.position.set(10, 20, 10); scene.add(dirLight);
+            // Luz para el pasillo (Blanca)
+            luzPasillo = new THREE.AmbientLight(0xffffff, 1.5); 
+            luzPasillo.visible = false;
+            scene.add(luzPasillo);
+
+            // Luz para el apartamento (Inicia apagada)
+            luzApartamento = new THREE.AmbientLight(0xffffff, 1.5); 
+            luzApartamento.visible = false;
+            scene.add(luzApartamento);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); 
+            dirLight.position.set(10, 20, 10); 
+            scene.add(dirLight);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -242,6 +255,7 @@
                 document.getElementById('loading').style.display = 'none';
                 ubicacionActual = "pasillo";
                 document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
+                luzPasillo.visible = true;
             });
         }
 
@@ -402,4 +416,143 @@
             marcoIzq2.position.set(-anchoPasillo/2 + 0.1, 1.1, 8); grupoPasillo.add(marcoIzq2);
             const puertaIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
             puertaIzq2.position.set(-anchoPasillo/2 + 0.15, 1.05, 8); grupoPasillo.add(puertaIzq2);
-            const portalIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.M
+            const portalIzq2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            portalIzq2.position.set(-anchoPasillo/2 + 0.2, 1.05, 8); grupoPasillo.add(portalIzq2);
+            portales.push(portalIzq2);
+
+            // Puerta Lateral Derecha 1 (Metro 2)
+            const marcoDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
+            marcoDer1.position.set(anchoPasillo/2 - 0.1, 1.1, 2); grupoPasillo.add(marcoDer1);
+            const puertaDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
+            puertaDer1.position.set(anchoPasillo/2 - 0.15, 1.05, 2); grupoPasillo.add(puertaDer1);
+            const portalDer1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            portalDer1.position.set(anchoPasillo/2 - 0.2, 1.05, 2); grupoPasillo.add(portalDer1);
+            portales.push(portalDer1);
+
+            // Puerta Lateral Derecha 2 (Metro 8)
+            const marcoDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.2, 1.3), matMarco);
+            marcoDer2.position.set(anchoPasillo/2 - 0.1, 1.1, 8); grupoPasillo.add(marcoDer2);
+            const puertaDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 1.0), matPuerta);
+            puertaDer2.position.set(anchoPasillo/2 - 0.15, 1.05, 8); grupoPasillo.add(puertaDer2);
+            const portalDer2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.1, 1.2), new THREE.MeshBasicMaterial({ visible: false }));
+            portalDer2.position.set(anchoPasillo/2 - 0.2, 1.05, 8); grupoPasillo.add(portalDer2);
+            portales.push(portalDer2);
+
+            // Cámara frente al ascensor, mirando hacia el pasillo
+            controls.getObject().position.set(0, 1.6, 5); 
+            controls.getObject().rotation.set(0, 0, 0);
+            scene.add(grupoPasillo);
+        }
+
+        function cambiarNivel(destino) {
+            if (transicionEnCurso) return; 
+            transicionEnCurso = true;
+            
+            grupoPasillo.visible = false;
+            grupoAptoTipo.visible = false;
+            techoTipo.visible = false;
+            document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
+            
+            luzPasillo.visible = false;
+            luzApartamento.visible = true;
+
+            setTimeout(() => {
+                ubicacionActual = "apartamento";
+                grupoAptoTipo.visible = true;
+                techoTipo.visible = true;
+                controls.getObject().position.set(0, 1.6, 3); 
+                controls.getObject().rotation.set(0, 0, 0);
+                
+                // EL TRUCO DE LA LUZ: El pasillo mantiene su luz blanca, el apartamento cambia.
+                if (destino === "fondo") {
+                    luzApartamento.color.setHex(0xffffff);
+                } else if (destino === "apto2") {
+                    luzApartamento.color.setHex(0xffaa77);
+                } else if (destino === "apto3") {
+                    luzApartamento.color.setHex(0x88bbff);
+                } else {
+                    luzApartamento.color.setHex(0xffffff);
+                }
+                
+                etiquetas = [
+                    { element: document.getElementById('etiqueta-sala'), posicion: new THREE.Vector3(0, 2.2, -1.5) }, 
+                    { element: document.getElementById('etiqueta-cocina'), posicion: new THREE.Vector3(-2.5, 2.2, -0.5) },
+                    { element: document.getElementById('etiqueta-habitacion1'), posicion: new THREE.Vector3(-2.5, 2.2, -4.0) },
+                    { element: document.getElementById('etiqueta-habitacion2'), posicion: new THREE.Vector3(2.5, 2.2, -4.0) },
+                    { element: document.getElementById('etiqueta-bano'), posicion: new THREE.Vector3(2.5, 2.2, 1.5) }
+                ];
+                etiquetas.forEach(item => item.element.style.display = 'block');
+                transicionEnCurso = false;
+            }, 500);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (animacionActiva && controls.isLocked === true && !transicionEnCurso) {
+                velocity.x -= velocity.x * 10.0 * 0.016; velocity.z -= velocity.z * 10.0 * 0.016;
+                direction.z = Number(moveForward) - Number(moveBackward); direction.x = Number(moveRight) - Number(moveLeft); direction.normalize();
+                if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * 0.016;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * 0.016;
+                controls.moveRight(-velocity.x * 0.016); controls.moveForward(-velocity.z * 0.016);
+
+                if ((modoExperiencia === 'edificio_torres' || modoExperiencia === 'edificio_pampa') && ubicacionActual === "pasillo") {
+                    const pos = controls.getObject().position;
+                    const jugadorBox = new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(pos.x, 1.0, pos.z), new THREE.Vector3(0.4, 1.8, 0.4));
+                    
+                    for (let i = 0; i < portales.length; i++) {
+                        if (jugadorBox.intersectsBox(new THREE.Box3().setFromObject(portales[i]))) {
+                            cambiarNivel(i === 0 ? "fondo" : "apto2"); 
+                            break;
+                        }
+                    }
+                } else if (ubicacionActual === "apartamento") {
+                    if (controls.getObject().position.z > 5.0) {
+                        transicionEnCurso = true;
+                        grupoAptoTipo.visible = false;
+                        techoTipo.visible = false;
+                        grupoPasillo.visible = true;
+                        document.querySelectorAll('.etiqueta-3d').forEach(e => e.style.display = 'none');
+                        
+                        luzApartamento.visible = false;
+                        luzPasillo.visible = true;
+                        luzPasillo.color.setHex(0xffffff); // Asegurar que el pasillo vuelva a ser blanco
+
+                        if (modoExperiencia === 'edificio_pampa') {
+                            controls.getObject().position.set(0, 1.6, 5);
+                            controls.getObject().rotation.set(0, 0, 0);
+                        } else {
+                            controls.getObject().position.set(0, 1.6, 1.5);
+                            controls.getObject().rotation.set(0, 0, 0);
+                        }
+                        ubicacionActual = "pasillo";
+                        setTimeout(() => { transicionEnCurso = false; }, 500);
+                    }
+                }
+            }
+
+            if (animacionActiva && etiquetas.length > 0) {
+                etiquetas.forEach(item => {
+                    const vector = item.posicion.clone(); 
+                    vector.project(camera);
+
+                    const x = (vector.x * .5 + .5) * window.innerWidth; 
+                    const y = (-(vector.y * .5) + .5) * window.innerHeight;
+                    
+                    if (vector.z > 1) { 
+                        item.element.style.opacity = 0; 
+                    } else { 
+                        item.element.style.opacity = 1; 
+                        item.element.style.left = `${x}px`; 
+                        item.element.style.top = `${y}px`; 
+                        const distancia = camera.position.distanceTo(item.posicion);
+                        const escala = Math.max(0.5, Math.min(1.5, 5 / distancia)); 
+                        item.element.style.transform = `translate(-50%, -50%) scale(${escala})`;
+                    }
+                });
+            }
+            if(renderer) renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
